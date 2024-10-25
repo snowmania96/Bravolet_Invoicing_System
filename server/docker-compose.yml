@@ -1,0 +1,43 @@
+services:
+
+  mongodb:
+    image: mongo:7.0.14
+    container_name: "${COMPOSE_PROJECT_NAME}-mongodb"
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    networks:
+      - invoicing-system
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27017/test --quiet"]
+      interval: 10s
+      retries: 6
+      start_period: 20s
+      timeout: 10s
+
+  app:
+    image: ghcr.io/${IMAGE_REPO}:${IMAGE_TAG}
+    container_name: "${COMPOSE_PROJECT_NAME}-app"
+    env_file:
+      - .env
+    networks:
+      - invoicing-system
+      - proxy
+    restart: always
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+volumes:
+  mongodb_data:
+
+networks:
+  invoicing-system:
+    external: true
+  proxy:
+    external: true
