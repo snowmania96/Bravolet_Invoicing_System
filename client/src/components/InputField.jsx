@@ -16,7 +16,7 @@ export default function InputField({ name, value, fieldName, onChange }) {
         color="default"
         size="small"
         fullWidth
-        InputProps={{ style: { fontSize: window.innerWidth > 1000 ? 16 : 12 } }}
+        InputProps={{ style: { fontSize: window.innerWidth > 1000 ? 14 : 12 } }}
       />
     </div>
   );

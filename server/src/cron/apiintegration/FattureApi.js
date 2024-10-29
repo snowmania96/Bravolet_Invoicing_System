@@ -126,7 +126,15 @@ export const updateReceipt = async (
     //Guest Info
     let entity = new fattureInCloudSdk.Entity();
     entity.name = invoiceInfo.name + " " + invoiceInfo.surname;
-    entity.address_extra = invoiceInfo.address;
+    //Identity Address info include street number or not
+    if (isNaN(parseInt(invoiceInfo.address.split(",")[1]))) {
+      entity.address_street = invoiceInfo.address.split(",")[0];
+      entity.address_city = invoiceInfo.address.split(",")[1].slice(1);
+    } else {
+      entity.address_street =
+        invoiceInfo.address.split(",")[0] + invoiceInfo.address.split(",")[1];
+      entity.address_city = invoiceInfo.address.split(",")[2].slice(1);
+    }
     entity.email = invoiceInfo.email;
     if (invoiceInfo.country !== "Italy") entity.country = invoiceInfo.country;
     entity.first_name = invoiceInfo.name;
@@ -271,7 +279,15 @@ export const createInvoice = async (
     //Guest Info
     let entity = new fattureInCloudSdk.Entity();
     entity.name = invoiceInfo.companyName;
-    entity.address_extra = invoiceInfo.address;
+    //Identity Address info include street number or not
+    if (isNaN(parseInt(invoiceInfo.address.split(",")[1]))) {
+      entity.address_street = invoiceInfo.address.split(",")[0];
+      entity.address_city = invoiceInfo.address.split(",")[1].slice(1);
+    } else {
+      entity.address_street =
+        invoiceInfo.address.split(",")[0] + invoiceInfo.address.split(",")[1];
+      entity.address_city = invoiceInfo.address.split(",")[2].slice(1);
+    }
     entity.email = invoiceInfo.email;
     if (invoiceInfo.country !== "Italy") entity.country = invoiceInfo.country;
     entity.certified_email = invoiceInfo.pecAddress;

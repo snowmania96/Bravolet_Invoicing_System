@@ -16,6 +16,7 @@ import InputCountrySelect from "components/InputCountrySelect";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { PageNotFound } from "scenes";
+import GoogleMaps from "components/GoogleMaps";
 
 const END_POINT = process.env.REACT_APP_BASE_URL;
 
@@ -96,7 +97,8 @@ export default function Invoice() {
           sx={{
             backgroundColor: theme.palette.background.alt,
             margin: "auto",
-          }}>
+          }}
+        >
           <CardContent style={{ margin: "auto" }}>
             <form onSubmit={handleSubmit}>
               {/* <Typography variant="h1">Stefan Jeremic</Typography>
@@ -111,7 +113,8 @@ export default function Invoice() {
                   <RadioGroup
                     name="isIndividual"
                     onChange={handleChange}
-                    value={formData.isIndividual}>
+                    value={formData.isIndividual}
+                  >
                     <div className="formControl">
                       <FormControlLabel
                         value="individual"
@@ -136,7 +139,8 @@ export default function Invoice() {
                       display: "flex",
                       flexDirection: "row",
                       justifyContent: "space-between",
-                    }}>
+                    }}
+                  >
                     <InputField
                       name={"name"}
                       onChange={handleChange}
@@ -150,12 +154,7 @@ export default function Invoice() {
                       fieldName={"Surname"}
                     />
                   </div>
-                  <InputField
-                    name={"address"}
-                    onChange={handleChange}
-                    value={formData.address}
-                    fieldName={"Address"}
-                  />
+                  <GoogleMaps formData={formData} setFormData={setFormaData} />
                   <InputCountrySelect
                     name={"country"}
                     value={formData.country}
@@ -181,7 +180,8 @@ export default function Invoice() {
                       display: "flex",
                       flexDirection: "row",
                       justifyContent: "space-between",
-                    }}>
+                    }}
+                  >
                     <InputField
                       name={"name"}
                       onChange={handleChange}
@@ -195,12 +195,7 @@ export default function Invoice() {
                       fieldName={"Surname"}
                     />
                   </div>
-                  <InputField
-                    name={"address"}
-                    onChange={handleChange}
-                    value={formData.address}
-                    fieldName={"Address"}
-                  />
+                  <GoogleMaps formData={formData} setFormData={setFormaData} />
                   <div className="vatFieldDirection">
                     <InputCountrySelect
                       name={"country"}
@@ -251,7 +246,8 @@ export default function Invoice() {
                   marginTop: "15px",
                   display: "flex",
                   justifyContent: "space-around",
-                }}>
+                }}
+              >
                 <div className="isIndividual">Total rent paid</div>
                 <div className="isIndividual">
                   {Math.round(invoiceInfo.grandTotal * 100) / 100} Euro
@@ -262,7 +258,8 @@ export default function Invoice() {
                 <a
                   href="https://buy.stripe.com/00g4ip47qfxJcLu148"
                   target="_blank"
-                  rel="noopener noreferrer">
+                  rel="noopener noreferrer"
+                >
                   online using this link
                 </a>{" "}
                 the tourist tax equal to

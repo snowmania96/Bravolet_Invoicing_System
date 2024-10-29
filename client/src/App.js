@@ -12,6 +12,7 @@ import {
   SignIn,
   Invoice,
   PageNotFound,
+  Idupload,
 } from "scenes";
 import PrivateRoute from "components/PrivateRoute";
 import { isExpired } from "react-jwt";
@@ -37,6 +38,7 @@ function App() {
           <CssBaseline />
           <Routes>
             <Route path="/signIn" element={<SignIn />} />
+            {/* <Route path="/idupload" element={<Idupload />} /> */}
             <Route path="/invoice/:id" element={<Invoice />} />
             <Route path="/invoice/pagenotfound" element={<PageNotFound />} />
             <Route element={<PrivateRoute />}>
