@@ -1,24 +1,30 @@
+import { TextField } from "@mui/material";
 import React from "react";
 
 export default function IduploadInputField({
   name,
   value,
   fieldName,
-  onChange,
+  id,
+  setGroupInfo,
 }) {
   return (
-    <div className="mt-3 w-100">
+    <div className="mt-3 w-100 d-flex flex-column">
       <label className="form-label">{fieldName}</label>
-      <input
-        type="text"
+      <TextField
         name={name}
         value={value}
-        className="form-control"
-        onChange={onChange}
+        onChange={(e) => {
+          setGroupInfo((prevGroupInfo) =>
+            prevGroupInfo.map((member, index) =>
+              index === id ? { ...member, [name]: e.target.value } : member
+            )
+          );
+        }}
         required
+        color="default"
+        size="small"
       />
-      <div className="valid-feedback">Valid</div>
-      <div className="invalid-feedback">This field is required</div>
     </div>
   );
 }

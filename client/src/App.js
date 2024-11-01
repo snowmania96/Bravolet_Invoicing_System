@@ -38,7 +38,7 @@ function App() {
           <CssBaseline />
           <Routes>
             <Route path="/signIn" element={<SignIn />} />
-            {/* <Route path="/idupload" element={<Idupload />} /> */}
+            <Route path="/idupload" element={<Idupload />} />
             <Route path="/invoice/:id" element={<Invoice />} />
             <Route path="/invoice/pagenotfound" element={<PageNotFound />} />
             <Route element={<PrivateRoute />}>

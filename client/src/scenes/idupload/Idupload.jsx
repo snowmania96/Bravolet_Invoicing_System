@@ -1,6 +1,14 @@
-import { Box, Button, Divider, Typography } from "@mui/material";
-import React, { useState } from "react";
-import BoltIcon from "@mui/icons-material/Bolt";
+import {
+  Autocomplete,
+  Avatar,
+  Box,
+  Button,
+  Divider,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+import React, { useEffect, useState } from "react";
 import IduploadInputField from "components/IduploadInputField";
 import IduploadSelectField from "components/IduploadSelectField";
 import { DemoContainer, DemoItem } from "@mui/x-date-pickers/internals/demo";
@@ -8,28 +16,32 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
+import IduploadAutocomplete from "components/IduploadAutocomplete";
+import documenti from "scenes/idupload/documenti.json";
+import comuni from "scenes/idupload/comuni.json";
+import stati from "scenes/idupload/stati.json";
+import { green, pink } from "@mui/material/colors";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import CleaaningServicesIcon from "@mui/icons-material/CleaningServices";
+import DeleteIcon from "@mui/icons-material/Delete";
+import UploadForm from "components/UploadForm";
 
 export default function Idupload() {
-  const [formData, setFormData] = useState({
+  //Individual memberInfo
+  const memberInfo = {
     surname: "",
     givenname: "",
     gender: "",
-    arriveDate: "",
-    stayDates: "",
-    accomodationType: "",
-    numberOfAccommodation: "",
-    dateOfBirth: dayjs("2022-04-17"),
-    placeOfBirth: "",
-    citizenship: "",
-    documentType: "",
+    dateOfBirth: dayjs("2024-01-01"),
+    placeOfBirth: { Descrizione: "" },
+    citizenship: { Descrizione: "" },
+    documentType: { Descrizione: "" },
     documentNumber: "",
-    placeOfReleaseDocument: "",
-  });
-
-  const onChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    placeOfReleaseDocument: { Descrizione: "" },
   };
-
+  const [idUploaded, setIdUploaded] = useState(false);
+  //Group info
+  const [groupInfo, setGroupInfo] = useState([memberInfo]);
   return (
     <div>
       <div className="jumbotron text-center" style={{ textAlign: "center" }}>
@@ -40,170 +52,204 @@ export default function Idupload() {
       </div>
       <div className="mt-4 container" style={{ width: "700px" }}>
         <form className="was-validated">
-          <Box
-            component="section"
-            sx={{ p: 2, border: "1px solid black", borderRadius: "10px" }}
-          >
-            <div className="d-flex flex-row">
-              <div className="col-7 m-auto">
-                <Typography variant="h5" fontWeight="bold">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    class="bi bi-lightning-charge-fill"
-                    viewBox="0 0 16 16"
-                  >
-                    <path d="M11.251.068a.5.5 0 0 1 .227.58L9.677 6.5H13a.5.5 0 0 1 .364.843l-8 8.5a.5.5 0 0 1-.842-.49L6.323 9.5H3a.5.5 0 0 1-.364-.843l8-8.5a.5.5 0 0 1 .615-.09z" />
-                  </svg>{" "}
-                  UPLOAD PASSPORT
-                </Typography>
-                <div className="mt-2">
-                  Upload your ID with the type of jpg, png
-                </div>
-              </div>
-              <div className="d-flex col-5 m-auto justify-content-center">
+          {idUploaded ? (
+            <div>
+              {groupInfo.map((member, id) => {
+                return (
+                  <div>
+                    {id === 0 ? (
+                      <div className="d-flex justify-content-between mt-5">
+                        <h3>Personal Information</h3>
+                        <Button
+                          color="default"
+                          onClick={() => {
+                            setGroupInfo((prevGroupInfo) =>
+                              prevGroupInfo.map((member, index) =>
+                                index === 0 ? memberInfo : member
+                              )
+                            );
+                          }}
+                        >
+                          <CleaaningServicesIcon /> Clear
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="d-flex justify-content-between mt-5">
+                        <h4>Member {id}</h4>
+
+                        <Button
+                          color="default"
+                          onClick={() => {
+                            setGroupInfo((prevGroupInfo) =>
+                              prevGroupInfo.filter(
+                                (member, index) => index !== id
+                              )
+                            );
+                          }}
+                        >
+                          <DeleteIcon /> Delete
+                        </Button>
+                      </div>
+                    )}
+                    <Divider
+                      style={{
+                        marginTop: "5px",
+                        borderBottomWidth: "1px",
+                        backgroundColor: "grey",
+                      }}
+                    />
+                    <div className="d-flex flex-row justify-content-between">
+                      <div className="mr-1 w-100">
+                        <IduploadInputField
+                          name={"surname"}
+                          fieldName={"Surname"}
+                          id={id}
+                          value={groupInfo[id].surname}
+                          setGroupInfo={setGroupInfo}
+                        />
+                      </div>
+                      <div className="ml-1 w-100">
+                        <IduploadInputField
+                          name={"givenname"}
+                          fieldName={"Given Name"}
+                          value={groupInfo[id].givenname}
+                          id={id}
+                          setGroupInfo={setGroupInfo}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="d-flex flex-row justify-content-between">
+                      <div className="w-100 mt-3">
+                        <LocalizationProvider dateAdapter={AdapterDayjs}>
+                          <DemoContainer
+                            components={["DatePicker"]}
+                            sx={{
+                              paddingTop: "-8px",
+                            }}
+                          >
+                            <DemoItem>
+                              <label className="form-label">
+                                Date of Birth
+                              </label>
+                              <div>
+                                <DatePicker
+                                  value={groupInfo[id].dateOfBirth}
+                                  sx={{ width: "331px" }}
+                                  slotProps={{ textField: { size: "small" } }}
+                                  onChange={(e) => {
+                                    setGroupInfo((prevGroupInfo) =>
+                                      prevGroupInfo.map((member, index) =>
+                                        index === id
+                                          ? { ...member, dateOfBirth: e }
+                                          : member
+                                      )
+                                    );
+                                  }}
+                                />
+                              </div>
+                            </DemoItem>
+                          </DemoContainer>
+                        </LocalizationProvider>
+                      </div>
+                      <div className="w-100 ml-1">
+                        <IduploadSelectField
+                          name={"gender"}
+                          fieldName={"Gender"}
+                          value={groupInfo[id].gender}
+                          selectItems={["Male", "Female"]}
+                          id={id}
+                          setGroupInfo={setGroupInfo}
+                        />
+                      </div>
+                    </div>
+
+                    <IduploadAutocomplete
+                      fieldName={"Citizenship"}
+                      items={stati}
+                      value={groupInfo[id].citizenship}
+                      name={"citizenship"}
+                      id={id}
+                      setGroupInfo={setGroupInfo}
+                    />
+                    <IduploadAutocomplete
+                      fieldName={"Place of Birth"}
+                      items={comuni}
+                      name={"placeOfBirth"}
+                      value={groupInfo[id].placeOfBirth}
+                      id={id}
+                      setGroupInfo={setGroupInfo}
+                    />
+                    {id === 0 && (
+                      <div>
+                        <IduploadAutocomplete
+                          fieldName={"Place of Release Document"}
+                          items={comuni}
+                          value={groupInfo[id].placeOfReleaseDocument}
+                          name={"placeOfReleaseDocument"}
+                          id={id}
+                          setGroupInfo={setGroupInfo}
+                        />
+                        <div className="d-flex flex-row justify-content-between">
+                          <div className="mr-1 w-100">
+                            <IduploadAutocomplete
+                              fieldName={"Document Type"}
+                              items={documenti}
+                              name={"documentType"}
+                              value={groupInfo[id].documentType}
+                              id={id}
+                              setGroupInfo={setGroupInfo}
+                            />
+                          </div>
+                          <div className="ml-1 w-100">
+                            <IduploadInputField
+                              name={"documentNumber"}
+                              fieldName={"Document Number"}
+                              id={id}
+                              setGroupInfo={setGroupInfo}
+                              value={groupInfo[id].documentNumber}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              <div className="d-flex justify-content-center mt-5">
                 <Button
-                  variant="contained"
-                  color="success"
-                  className="p-2 w-75"
+                  onClick={() =>
+                    setGroupInfo((prevGroupInfo) => [
+                      ...prevGroupInfo,
+                      memberInfo,
+                    ])
+                  }
                 >
-                  Upload ID Document
+                  <Avatar sx={{ bgcolor: green[500] }}>
+                    <GroupAddIcon />
+                  </Avatar>
                 </Button>
               </div>
-            </div>
-          </Box>
-          <div className="d-flex flex-row mt-3">
-            <p className="text-danger">*</p>
-            <p className="text-secondary">Required</p>
-          </div>
-          <div className="d-flex justify-content-between mt-3">
-            <Typography variant="h3" color="grey">
-              Personal information
-            </Typography>
-            <Button variant="contained">Clear</Button>
-          </div>
-
-          <Divider
-            style={{
-              marginTop: "5px",
-              borderBottomWidth: "1px",
-              backgroundColor: "grey",
-            }}
-          />
-          <div className="d-flex flex-row justify-content-between">
-            <div className="mr-1 w-100">
-              <IduploadInputField
-                name={"surname"}
-                fieldName={"Surname"}
-                onChange={onChange}
-                value={formData.surname}
-              />
-            </div>
-            <div className="ml-1 w-100">
-              <IduploadInputField
-                name={"givenname"}
-                fieldName={"Given Name"}
-                onChange={onChange}
-                value={formData.givenname}
-              />
-            </div>
-          </div>
-
-          <div className="d-flex flex-row justify-content-between">
-            <div className="w-100 mt-3">
-              <LocalizationProvider dateAdapter={AdapterDayjs}>
-                <DemoContainer
-                  components={["DatePicker"]}
-                  sx={{
-                    paddingTop: "-8px",
+              <div className="mt-5 mb-5">
+                <button
+                  className="btn"
+                  type="submit"
+                  style={{
+                    backgroundColor: "#00756a",
+                    color: "white",
+                    width: "100%",
+                    height: "40px",
+                    marginBottom: "50px",
                   }}
                 >
-                  <DemoItem>
-                    <label className="form-label">Date of Birth</label>
-                    <div>
-                      <DatePicker
-                        value={formData.dateOfBirth}
-                        sx={{ marginTop: "2px", width: "331px" }}
-                        slotProps={{ textField: { size: "small" } }}
-                        onChange={(e) => {
-                          setFormData({ ...formData, dateOfBirth: e });
-                        }}
-                      />
-                    </div>
-
-                    <div
-                      style={{
-                        width: "100%",
-                        marginTop: ".25rem",
-                        fontSize: "80%",
-                        color: "#28a745",
-                      }}
-                    >
-                      This field is required
-                    </div>
-                  </DemoItem>
-                </DemoContainer>
-              </LocalizationProvider>
+                  Submit
+                </button>
+              </div>
             </div>
-            <div className="w-100 ml-1">
-              <IduploadSelectField
-                name={"gender"}
-                fieldName={"Gender"}
-                onChange={onChange}
-                value={formData.gender}
-                selectItems={["Male", "Female"]}
-              />
-            </div>
-          </div>
-          <div className="d-flex flex-row justify-content-between">
-            <div className="mr-1 w-100">
-              <IduploadInputField
-                name={"citizenship"}
-                fieldName={"Citizenship"}
-                onChange={onChange}
-                value={formData.citizenship}
-              />
-            </div>
-            <div className="ml-1 w-100">
-              <IduploadInputField
-                name={"placeOfBirth"}
-                fieldName={"Place of Birth"}
-                onChange={onChange}
-                value={formData.placeOfBirth}
-              />
-            </div>
-          </div>
-          <IduploadInputField
-            name={"placeOfReleaseDocument"}
-            fieldName={"Place of Release Document"}
-            onChange={onChange}
-            value={formData.placeOfReleaseDocument}
-          />
-          <div className="d-flex flex-row justify-content-between">
-            <div className="mr-1 w-100">
-              <IduploadInputField
-                name={"documentType"}
-                fieldName={"Document Type"}
-                onChange={onChange}
-                value={formData.documentType}
-              />
-            </div>
-            <div className="ml-1 w-100">
-              <IduploadInputField
-                name={"documentNumber"}
-                fieldName={"Document Number"}
-                onChange={onChange}
-                value={formData.documentNumber}
-              />
-            </div>
-          </div>
-          <div>
-            <button className="btn btn-primary" type="submit">
-              Submit
-            </button>
-          </div>
+          ) : (
+            <UploadForm setIdUploaded={setIdUploaded} />
+          )}
         </form>
       </div>
     </div>

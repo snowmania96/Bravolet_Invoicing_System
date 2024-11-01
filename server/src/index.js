@@ -7,6 +7,7 @@ import managementRoutes from "./routes/management.js";
 import guestRoutes from "./routes/guest.js";
 import apartmentRoutes from "./routes/apartment.js";
 import invoiceRoutes from "./routes/invoice.js";
+import idRoutes from "./routes/id.js";
 import cron from "node-cron";
 import { cronWork } from "./cron/cronWork.js";
 import schemaRoutes from "./routes/schema.js";
@@ -28,6 +29,7 @@ app.use("/api/guest", guestRoutes);
 app.use("/api/apartment", apartmentRoutes);
 app.use("/api/schema", schemaRoutes);
 app.use("/api/invoice", invoiceRoutes);
+app.use("/api/idupload", idRoutes);
 /* MONGOOSE SETUP */
 const PORT = process.env.PORT || 5001;
 

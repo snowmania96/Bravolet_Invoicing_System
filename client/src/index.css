@@ -105,6 +105,26 @@ body,
   border-right: none; /* Ensure no right border on last child */
 }
 
+.dropzone {
+  text-align: center;
+  padding: 70px;
+  border: 3px dashed #eeeeee;
+  background-color: #fafafa;
+  color: #bdbdbd;
+  cursor: pointer;
+  margin-bottom: 30px;
+}
+
+.selected-file-wrapper {
+  text-align: center;
+}
+
+.selected-file {
+  color: #000;
+  font-weight: bold;
+  font-size: 20px;
+}
+
 .background {
   background-position: center;
   background-size: cover;
