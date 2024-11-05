@@ -2,6 +2,7 @@ import Schema from "../model/Schema.js";
 import ReceiptNumber from "../model/ReceiptNumber.js";
 import InvoiceNumber from "../model/InvoiceNumber.js";
 import Apartment from "../model/Apartment.js";
+import { group } from "console";
 
 export const getNotes = async (reservationInfo) => {
   try {
@@ -165,4 +166,80 @@ export const getCityTax = (reservationInfo) => {
     flag: false,
     amount: 2 * reservationInfo.guestsCount * reservationInfo.nightsCount,
   };
+};
+
+export const generatePolicyServiceText = (nightsCount, groupInfo) => {
+  let result = "";
+  for (let i = 0; i < groupInfo.length; i++) {
+    let individual = "<string>";
+    //Insert Type of Accomodation 2
+    if (i === 0) {
+      if (groupInfo.length === 1) individual += "16";
+      else individual += "18";
+    } else {
+      individual += "20";
+    }
+
+    //Insert Arrival Date 10
+    const dateString = new Date().toISOString().split("T")[0].split("-");
+    const formattedDate = `${dateString[2]}/${dateString[1]}/${dateString[0]}`;
+    individual += formattedDate;
+
+    //Insert Staying Dates 2
+    if (nightsCount < 10) individual += `0${nightsCount}`;
+    else individual += nightsCount;
+
+    //Insert Surname 50
+    individual += groupInfo[i].surname;
+    individual += " ".repeat(50 - groupInfo[i].surname.length);
+
+    //Insert givenname 30
+    individual += groupInfo[i].givenname;
+    individual += " ".repeat(30 - groupInfo[i].givenname.length);
+
+    //Insert gender 1
+    if (groupInfo[i].gender === "Male") individual += "1";
+    else individual += "2";
+
+    //Insert Date of Birth 10
+    const date = new Date(groupInfo[i].dateOfBirth);
+    date.setDate(date.getDate() + 1);
+    const birthDateString = date.toISOString().split("T")[0].split("-");
+    const formattedBirthDate = `${birthDateString[2]}/${birthDateString[1]}/${birthDateString[0]}`;
+    individual += formattedBirthDate;
+
+    //Insert common birth 9
+    individual += groupInfo[i].placeOfBirth.Codice;
+
+    //Insert provice onf birth 2
+    individual += groupInfo[i].placeOfBirth.Provincia;
+
+    //Insert state of birth 9
+    if (groupInfo[i].placeOfBirth.Provincia === "ES")
+      individual += groupInfo[i].placeOfBirth.Codice;
+    else individual += "100000100";
+
+    //Insert citizenship
+    individual += groupInfo[i].citizenship.Codice;
+    individual += " ".repeat(20 - groupInfo[i].citizenship.length);
+
+    //Insert document type
+    if (groupInfo[i].documentType.Codice !== undefined)
+      individual += groupInfo[i].documentType.Codice;
+    else individual += " ".repeat(5);
+
+    //Insert document Number
+    if (groupInfo[i].documentNumber !== "") {
+      individual += groupInfo[i].documentNumber;
+      individual += " ".repeat(20 - groupInfo[i].documentNumber.length);
+    } else individual += " ".repeat(20);
+
+    //Insert Place of ReleaseDocument
+    if (groupInfo[i].placeOfReleaseDocument.Codice !== undefined)
+      individual += groupInfo[i].placeOfReleaseDocument.Codice;
+    else individual += " ".repeat(9);
+    individual += "</string>";
+    result += individual;
+  }
+  return result;
 };

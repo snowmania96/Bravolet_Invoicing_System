@@ -21,6 +21,32 @@ export const fetchReservationId = async (apiKey, today) => {
   }
 };
 
+export const fetchReservationInfoFromConfirmationCode = async (
+  apiKey,
+  confirmationCode
+) => {
+  try {
+    openApiDocs.auth(`Bearer ${apiKey}`);
+    let { data } = await openApiDocs.getReservations({
+      filters: `[{"field":"confirmationCode", "operator":"$eq","value": "${confirmationCode}"}]`,
+      limit: "100",
+      fields: "id%20checkIn%20checkOut%20nightsCount",
+    });
+    return data.results[0];
+  } catch (error) {
+    console.log(error.status);
+    if (error.status == 401) {
+      const newApiKey = await saveGuestyAuthKey();
+      // console.log(newApiKey);
+      return await fetchReservationInfoFromConfirmationCode(
+        newApiKey,
+        confirmationCode
+      );
+    }
+    console.log("Fetch Reservation from confirmationcode Error: ", error);
+  }
+};
+
 export const fetchReservationInfo = async (apiKey, id) => {
   try {
     openApiDocs.auth(`Bearer ${apiKey}`);

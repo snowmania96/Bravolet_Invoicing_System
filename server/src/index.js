@@ -58,17 +58,17 @@ app.listen(PORT, () =>
 
 //Node cron
 
-cron.schedule(
-  "1 0 * * *",
-  async () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const formattedDate = tomorrow.toISOString().split("T")[0];
-    // const today = new Date().toISOString().split("T")[0];
-    await cronWork(formattedDate);
-  },
-  {
-    scheduled: true,
-    timezone: "Europe/Rome",
-  }
-);
+// cron.schedule(
+//   "1 0 * * *",
+//   async () => {
+//     const tomorrow = new Date();
+//     tomorrow.setDate(tomorrow.getDate() + 1);
+//     const formattedDate = tomorrow.toISOString().split("T")[0];
+//     // const today = new Date().toISOString().split("T")[0];
+//     await cronWork(formattedDate);
+//   },
+//   {
+//     scheduled: true,
+//     timezone: "Europe/Rome",
+//   }
+// );

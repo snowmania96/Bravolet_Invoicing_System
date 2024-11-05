@@ -1,45 +1,53 @@
 import axios from "axios";
+import dayjs from "dayjs";
 import React, { useState, useCallback } from "react";
 import Dropzone from "react-dropzone";
 
 const REACT_APP_BASE_URL = process.env.REACT_APP_BASE_URL;
 
-export default function UploadForm({ setIdUploaded }) {
+export default function UploadForm({ setIdUploaded, setGroupInfo, id }) {
   const [selectedFiles, setSelectedFiles] = useState(undefined);
   const [currentFile, setCurrentFile] = useState(true);
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
-  const [fileInfos, setFileInfos] = useState([]);
+  const [loading, setLoading] = useState("Caricamento");
+  const [text, setText] = useState(
+    "Trascina e rilascia il file qui oppure fai clic per selezionare il file"
+  );
   const [checkbox, setCheckbox] = useState(false);
   const onDrop = (files) => {
     if (files.length > 0) {
-      console.log(files);
+      if (!files[0].type.startsWith("image/")) {
+        setText("Carica un file immagine.");
+        return;
+      }
       setSelectedFiles(files);
     }
   };
 
   const parseProgress = (progressEvent) => {
-    setProgress((progressEvent.loaded / progressEvent.total) * 100);
+    setProgress(Math.floor((progressEvent.loaded / progressEvent.total) * 100));
   };
 
   const upload = async (e) => {
     e.preventDefault();
 
     if (!selectedFiles || selectedFiles.length === 0) {
-      setMessage("Please select a file to upload.");
+      setMessage("Seleziona un file da caricare.");
       return;
     }
 
     const file = selectedFiles[0];
     setProgress(0);
     setCurrentFile(file);
-
+    setLoading("Caricamento...");
+    setMessage("Ci vorranno alcuni secondi");
     const formData = new FormData();
     formData.append("file", file);
 
     try {
       const response = await axios.post(
-        `${REACT_APP_BASE_URL}/idupload/asdf`,
+        `${REACT_APP_BASE_URL}/idupload/${id}`,
         formData,
         {
           headers: {
@@ -48,13 +56,44 @@ export default function UploadForm({ setIdUploaded }) {
           onUploadProgress: parseProgress,
         }
       );
-      setMessage(response.data);
-      setIdUploaded((prevIdUploaded) => !prevIdUploaded);
+      const extractedInfo = response.data;
+      if (extractedInfo.surname === undefined) {
+        setMessage("Caricamento non riuscito. Prova un altro ID.");
+        setLoading("Caricamento");
+      } else {
+        setGroupInfo((prevGroupInfo) =>
+          prevGroupInfo.map((member, index) =>
+            index === 0
+              ? {
+                  ...member,
+                  surname: extractedInfo.surname,
+                  givenname: extractedInfo.givenname,
+                  gender:
+                    extractedInfo.gender === undefined
+                      ? ""
+                      : extractedInfo.gender === "M"
+                      ? "Maschio"
+                      : "Femmina",
+                  dateOfBirth: dayjs(extractedInfo.birthDate),
+                  documentNumber: extractedInfo.documentNumber,
+                }
+              : member
+          )
+        );
+        setMessage("Caricamento riuscito");
+        setIdUploaded((prevIdUploaded) => !prevIdUploaded);
+      }
     } catch (err) {
-      setMessage("Error uploading file");
+      if (err.status === 400) setMessage("File immagine non valido");
+      else if (err.status === 500)
+        setMessage("Errore durante il caricamento del file");
+      setLoading("Caricamento");
     }
   };
-
+  console.log(!selectedFiles || !checkbox || loading === "Caricamento...");
+  console.log(!selectedFiles);
+  console.log(!checkbox);
+  console.log(loading === "Caricamento...");
   return (
     <div className="mt-3">
       {currentFile && progress !== 0 && (
@@ -81,9 +120,7 @@ export default function UploadForm({ setIdUploaded }) {
                   {selectedFiles && selectedFiles[0].name}
                 </div>
               ) : (
-                <div style={{ fontSize: "20px" }}>
-                  Drag and drop file here, or click to select file
-                </div>
+                <div style={{ fontSize: "20px" }}>{text}</div>
               )}
             </div>
             <div className="form-group">
@@ -96,17 +133,19 @@ export default function UploadForm({ setIdUploaded }) {
                   required
                 />
                 <label className="form-check-label" for="invalidCheck">
-                  Agree to terms and conditions
+                  Accetta termini e condizioni
                 </label>
                 <div className="invalid-feedback">
-                  You must agree before uploading.
+                  Devi accettare prima del caricamento.
                 </div>
               </div>
             </div>
             <aside className="selected-file-wrapper">
               <button
                 className="btn"
-                disabled={!selectedFiles || !checkbox}
+                disabled={
+                  !selectedFiles || !checkbox || loading === "Caricamento..."
+                }
                 style={{
                   backgroundColor: "#00756a",
                   color: "white",
@@ -115,7 +154,7 @@ export default function UploadForm({ setIdUploaded }) {
                 }}
                 onClick={upload}
               >
-                Upload
+                {loading}
               </button>
             </aside>
           </section>

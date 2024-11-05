@@ -117,7 +117,13 @@ export default function GoogleMaps({ formData, setFormData }) {
           setInputValue(newInputValue);
         }}
         renderInput={(params) => (
-          <TextField {...params} size="small" color="default" fullWidth />
+          <TextField
+            {...params}
+            size="small"
+            color="default"
+            fullWidth
+            required
+          />
         )}
         renderOption={(props, option) => {
           const { key, ...optionProps } = props;

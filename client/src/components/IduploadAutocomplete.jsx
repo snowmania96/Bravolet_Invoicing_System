@@ -25,7 +25,7 @@ export default function IduploadAutocomplete({
     setOpen(true);
     (async () => {
       setLoading(true);
-      await sleep(1000);
+      await sleep(500);
       setLoading(false);
 
       setOptions([...items]);
