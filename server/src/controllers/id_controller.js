@@ -84,6 +84,14 @@ export const idUpload = async (req, res) => {
         extractedIdinfo.nationality.value === undefined
           ? "ITA"
           : extractedIdinfo.nationality.value,
+      documentType:
+        extractedIdinfo.documentType.value === undefined
+          ? ""
+          : extractedIdinfo.documentType.value,
+      placeOfBirth:
+        extractedIdinfo.birthPlace.value === undefined
+          ? ""
+          : extractedIdinfo.birthPlace.value,
     };
 
     res.status(200).json(idInfo);

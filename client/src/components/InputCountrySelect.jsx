@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import country from "country-list-js";
 
-// console.log(country.findByIso3("UKR"));
+console.log(country.findByIso3());
 
 export default function InputCountrySelect({ name, value, onChange }) {
   return (

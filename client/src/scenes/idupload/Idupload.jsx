@@ -64,7 +64,7 @@ export default function Idupload() {
       toast.error(err.response.data.error, { position: "top-right" });
     }
   };
-
+  console.log(idUploaded);
   return (
     <div>
       <div
@@ -76,9 +76,9 @@ export default function Idupload() {
           Carica il tuo documento d'identità
         </Typography>
       </div>
-      <div className="mt-4 container" style={{ width: "700px" }}>
+      <div className="container" style={{ width: "700px" }}>
         {submitText === "Submit" ? (
-          <form className="was-validated">
+          <form className="was-validated" onSubmit={onClickSubmitButton}>
             {idUploaded ? (
               <div>
                 {groupInfo.map((member, id) => {
@@ -102,7 +102,7 @@ export default function Idupload() {
                         </div>
                       ) : (
                         <div className="d-flex justify-content-between mt-5">
-                          <h4>Membro ${id}</h4>
+                          <h4>Membro {id}</h4>
 
                           <Button
                             color="default"
@@ -133,6 +133,9 @@ export default function Idupload() {
                             id={id}
                             value={groupInfo[id].surname}
                             setGroupInfo={setGroupInfo}
+                            tooltipTitle={
+                              "Cognome, rispettare i caratteri previsti"
+                            }
                           />
                         </div>
                         <div className="ml-1 w-100">
@@ -142,6 +145,9 @@ export default function Idupload() {
                             value={groupInfo[id].givenname}
                             id={id}
                             setGroupInfo={setGroupInfo}
+                            tooltipTitle={
+                              "Nome, rispettare i caratteri previsti"
+                            }
                           />
                         </div>
                       </div>
@@ -198,6 +204,7 @@ export default function Idupload() {
                         name={"citizenship"}
                         id={id}
                         setGroupInfo={setGroupInfo}
+                        tooltipTitle={"Cittadinanza, Selezionare lo Stato"}
                       />
                       <IduploadAutocomplete
                         fieldName={"Comune Nascita"}
@@ -206,6 +213,9 @@ export default function Idupload() {
                         value={groupInfo[id].placeOfBirth}
                         id={id}
                         setGroupInfo={setGroupInfo}
+                        tooltipTitle={
+                          "Luogo di Nascita, Selezionare il comune italiano o lo stato estero"
+                        }
                       />
                       {id === 0 && (
                         <div>
@@ -216,6 +226,9 @@ export default function Idupload() {
                             name={"placeOfReleaseDocument"}
                             id={id}
                             setGroupInfo={setGroupInfo}
+                            tooltipTitle={
+                              "Luogo Documento, Selezionare il comune italiano o lo stato estero"
+                            }
                           />
                           <div className="d-flex flex-row justify-content-between">
                             <div className="mr-1 w-100">
@@ -226,6 +239,9 @@ export default function Idupload() {
                                 value={groupInfo[id].documentType}
                                 id={id}
                                 setGroupInfo={setGroupInfo}
+                                tooltipTitle={
+                                  "Selezionare il tipo di Documento"
+                                }
                               />
                             </div>
                             <div className="ml-1 w-100">
@@ -235,6 +251,7 @@ export default function Idupload() {
                                 id={id}
                                 setGroupInfo={setGroupInfo}
                                 value={groupInfo[id].documentNumber}
+                                tooltipTitle={"Numero del Documento"}
                               />
                             </div>
                           </div>
@@ -244,19 +261,22 @@ export default function Idupload() {
                   );
                 })}
 
-                <div className="d-flex justify-content-center mt-5">
-                  <Button
-                    onClick={() =>
-                      setGroupInfo((prevGroupInfo) => [
-                        ...prevGroupInfo,
-                        memberInfo,
-                      ])
-                    }
-                  >
-                    <Avatar sx={{ bgcolor: green[500] }}>
-                      <GroupAddIcon />
-                    </Avatar>
-                  </Button>
+                <div className="d-flex flex-column  mt-5">
+                  <div className="d-flex justify-content-center">
+                    <Button
+                      onClick={() =>
+                        setGroupInfo((prevGroupInfo) => [
+                          ...prevGroupInfo,
+                          memberInfo,
+                        ])
+                      }
+                    >
+                      <Avatar sx={{ bgcolor: green[500] }}>
+                        <GroupAddIcon />
+                      </Avatar>
+                    </Button>
+                  </div>
+                  <div className="text-center">Aggiungi un altro ospite</div>
                 </div>
                 <div className="mt-5 mb-5">
                   <button
@@ -270,7 +290,6 @@ export default function Idupload() {
                       height: "40px",
                       marginBottom: "50px",
                     }}
-                    onClick={onClickSubmitButton}
                   >
                     {submitText}
                   </button>

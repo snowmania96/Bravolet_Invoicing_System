@@ -1,5 +1,23 @@
-import { Autocomplete, CircularProgress, TextField } from "@mui/material";
+import {
+  Autocomplete,
+  CircularProgress,
+  TextField,
+  Typography,
+} from "@mui/material";
 import React, { useState } from "react";
+import styled from "@emotion/styled";
+import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
+
+const BootstrapTooltip = styled(({ className, ...props }) => (
+  <Tooltip {...props} arrow classes={{ popper: className }} />
+))(({ theme }) => ({
+  [`& .${tooltipClasses.arrow}`]: {
+    color: theme.palette.common.black,
+  },
+  [`& .${tooltipClasses.tooltip}`]: {
+    backgroundColor: theme.palette.common.black,
+  },
+}));
 
 function sleep(duration) {
   return new Promise((resolve) => {
@@ -16,6 +34,7 @@ export default function IduploadAutocomplete({
   id,
   setGroupInfo,
   name,
+  tooltipTitle,
 }) {
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState([]);
@@ -68,28 +87,49 @@ export default function IduploadAutocomplete({
         }}
         renderInput={(params) => (
           <div>
-            <TextField
-              id={fieldName}
-              className="form-control"
-              {...params}
-              size="small"
-              color="default"
-              fullWidth
-              required
+            <BootstrapTooltip
+              title={
+                <Typography fontSize={"12px"} align="center">
+                  {tooltipTitle}
+                </Typography>
+              }
+              placement="top"
               slotProps={{
-                input: {
-                  ...params.InputProps,
-                  endAdornment: (
-                    <React.Fragment>
-                      {loading ? (
-                        <CircularProgress color="inherit" size={20} />
-                      ) : null}
-                      {params.InputProps.endAdornment}
-                    </React.Fragment>
-                  ),
+                popper: {
+                  modifiers: [
+                    {
+                      name: "offset",
+                      options: {
+                        offset: [0, -10],
+                      },
+                    },
+                  ],
                 },
               }}
-            />
+            >
+              <TextField
+                id={fieldName}
+                className="form-control"
+                {...params}
+                size="small"
+                color="default"
+                fullWidth
+                required
+                slotProps={{
+                  input: {
+                    ...params.InputProps,
+                    endAdornment: (
+                      <React.Fragment>
+                        {loading ? (
+                          <CircularProgress color="inherit" size={20} />
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </React.Fragment>
+                    ),
+                  },
+                }}
+              />
+            </BootstrapTooltip>
           </div>
         )}
       />
