@@ -14,13 +14,13 @@ export const idUpload = async (req, res) => {
   if (!req.file) {
     return res.status(400).send("No file uploaded.");
   }
+  const filetype = req.file.mimetype.split("/")[1];
   const params = {
     Bucket: process.env.BUCKET_NAME,
-    Key: `${req.params.id}.jpg`,
+    Key: `${req.params.id}.${filetype}`,
     Body: req.file.buffer,
     ContentType: req.file.mimetype,
   };
-
   const s3Client = new S3Client({
     region: "us-west-2", // e.g., 'us-west-2'
     endpoint: process.env.S3_END_POINT,

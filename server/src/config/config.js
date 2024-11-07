@@ -198,7 +198,7 @@ export const generatePolicyServiceText = (nightsCount, groupInfo) => {
     individual += " ".repeat(30 - groupInfo[i].givenname.length);
 
     //Insert gender 1
-    if (groupInfo[i].gender === "Male") individual += "1";
+    if (groupInfo[i].gender === "Maschio") individual += "1";
     else individual += "2";
 
     //Insert Date of Birth 10
@@ -221,7 +221,6 @@ export const generatePolicyServiceText = (nightsCount, groupInfo) => {
 
     //Insert citizenship
     individual += groupInfo[i].citizenship.Codice;
-    individual += " ".repeat(20 - groupInfo[i].citizenship.length);
 
     //Insert document type
     if (groupInfo[i].documentType.Codice !== undefined)

@@ -28,6 +28,7 @@ import { useParams } from "react-router-dom";
 import image from "./check (1).png";
 import "react-toastify/dist/ReactToastify.css";
 import { toast, ToastContainer } from "react-toastify";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 const REACT_APP_BASE_URL = process.env.REACT_APP_BASE_URL;
 
@@ -45,38 +46,43 @@ export default function Idupload() {
     placeOfReleaseDocument: { Descrizione: "" },
   };
   const [idUploaded, setIdUploaded] = useState(false);
-  //Group info
   const [groupInfo, setGroupInfo] = useState([memberInfo]);
   const [submitText, setSubmitText] = useState("Submit");
   const { id } = useParams();
 
+  //Set media query
+  const matches = useMediaQuery("(min-width: 1000px)");
+  console.log(matches);
   const onClickSubmitButton = async (e) => {
     e.preventDefault();
-    setSubmitText("Submitting...");
     try {
       const response = await axios.post(
         `${REACT_APP_BASE_URL}/idupload/input/${id}`,
         groupInfo
       );
-      console.log(response.data);
+      setSubmitText("Submitting...");
     } catch (err) {
       console.log(err);
       toast.error(err.response.data.error, { position: "top-right" });
     }
   };
-  console.log(idUploaded);
   return (
     <div>
       <div
         className="jumbotron text-center w-100"
-        style={{ textAlign: "center" }}
+        style={{ textAlign: "center", height: "250px" }}
       >
-        <Typography variant="h1">Bravolet Sistema di Fatturazione</Typography>
-        <Typography className="mt-3" variant="h3">
+        <Typography className="mt-3" variant="h1">
+          Bravolet Sistema di Fatturazione
+        </Typography>
+        <Typography className="mt-5" variant="h3">
           Carica il tuo documento d'identità
         </Typography>
       </div>
-      <div className="container" style={{ width: "700px" }}>
+      <div
+        className="container"
+        style={matches ? { width: "700px" } : { width: "100%" }}
+      >
         {submitText === "Submit" ? (
           <form className="was-validated" onSubmit={onClickSubmitButton}>
             {idUploaded ? (
@@ -138,7 +144,7 @@ export default function Idupload() {
                             }
                           />
                         </div>
-                        <div className="ml-1 w-100">
+                        <div className="mr-1 w-100">
                           <IduploadInputField
                             name={"givenname"}
                             fieldName={"Nome"}
@@ -168,7 +174,11 @@ export default function Idupload() {
                                 <div>
                                   <DatePicker
                                     value={groupInfo[id].dateOfBirth}
-                                    sx={{ width: "331px" }}
+                                    sx={
+                                      matches
+                                        ? { width: "331px" }
+                                        : { width: "100%" }
+                                    }
                                     slotProps={{ textField: { size: "small" } }}
                                     onChange={(e) => {
                                       setGroupInfo((prevGroupInfo) =>
@@ -230,8 +240,14 @@ export default function Idupload() {
                               "Luogo Documento, Selezionare il comune italiano o lo stato estero"
                             }
                           />
-                          <div className="d-flex flex-row justify-content-between">
-                            <div className="mr-1 w-100">
+                          <div
+                            className={
+                              matches
+                                ? "d-flex flex-row justify-content-between"
+                                : "d-flex flex-column justify-content-between"
+                            }
+                          >
+                            <div className={matches ? "mr-1 w-100" : "w-100"}>
                               <IduploadAutocomplete
                                 fieldName={"Tipo Documento"}
                                 items={documenti}
@@ -244,7 +260,7 @@ export default function Idupload() {
                                 }
                               />
                             </div>
-                            <div className="ml-1 w-100">
+                            <div className={matches ? "ml-1 w-100" : "w-100"}>
                               <IduploadInputField
                                 name={"documentNumber"}
                                 fieldName={"Numero Documento"}
@@ -311,7 +327,7 @@ export default function Idupload() {
             <div className="mt-3">
               <img src={image} width={"70px"} />
             </div>
-            <div className="mt-5">
+            <div className="mt-5 text-center">
               <h4>Le tue informazioni sono state inviate con successo.</h4>
             </div>
           </div>

@@ -1,15 +1,11 @@
 import axios from "axios";
 import dayjs from "dayjs";
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import Dropzone from "react-dropzone";
 import state from "scenes/idupload/stati.json";
 import comuni from "scenes/idupload/comuni.json";
-import { LocalDining } from "@mui/icons-material";
 import { Box } from "@mui/material";
-import CircularProgress, {
-  circularProgressClasses,
-} from "@mui/material/CircularProgress";
-import styled from "@emotion/styled";
+import CircularProgress from "@mui/material/CircularProgress";
 
 const REACT_APP_BASE_URL = process.env.REACT_APP_BASE_URL;
 
@@ -91,7 +87,7 @@ export default function UploadForm({ setIdUploaded, setGroupInfo, id }) {
                     ...member,
                     citizenship: {
                       Descrizione: "ITALIA",
-                      Codice: "1000000100",
+                      Codice: "100000100",
                     },
                   }
                 : member
@@ -172,8 +168,7 @@ export default function UploadForm({ setIdUploaded, setGroupInfo, id }) {
       }
     } catch (err) {
       if (err.status === 400) setMessage("Tipo di file non valido");
-      else if (err.status === 500)
-        setMessage("Errore durante il caricamento del file");
+      else if (err.status === 500) setMessage("Errore interno del server");
       setLoading(false);
     }
   };
@@ -183,7 +178,7 @@ export default function UploadForm({ setIdUploaded, setGroupInfo, id }) {
       {loading ? (
         <CircularLoading />
       ) : (
-        <div className="mt-5">
+        <div className="mt-3">
           <Dropzone onDrop={onDrop} multiple={false}>
             {({ getRootProps, getInputProps }) => (
               <section>
@@ -202,14 +197,18 @@ export default function UploadForm({ setIdUploaded, setGroupInfo, id }) {
                     <input
                       className="form-check-input"
                       type="checkbox"
+                      checked={checkbox}
                       value={checkbox}
                       size={"large"}
                       onChange={() => setCheckbox(!checkbox)}
                       style={{ marginTop: "6px" }}
                       required
                     />
-                    <div style={{ fontSize: "16px" }}>
-                      Accetta <a href="#">Termini e eondizioni</a>
+                    <div
+                      style={{ fontSize: "16px" }}
+                      onClick={() => setCheckbox(!checkbox)}
+                    >
+                      Sono d'accordo con <a href="#">Termini e eondizioni</a>
                     </div>
                   </div>
                 </div>
