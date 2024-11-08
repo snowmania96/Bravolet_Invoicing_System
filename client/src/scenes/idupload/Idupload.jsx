@@ -24,7 +24,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import UploadForm from "components/UploadForm";
 import axios from "axios";
 import "dayjs/locale/it";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import image from "./check (1).png";
 import "react-toastify/dist/ReactToastify.css";
 import { toast, ToastContainer } from "react-toastify";
@@ -48,42 +48,64 @@ export default function Idupload() {
   const [idUploaded, setIdUploaded] = useState(false);
   const [groupInfo, setGroupInfo] = useState([memberInfo]);
   const [submitText, setSubmitText] = useState("Submit");
+  const [reservationInfo, setReservationInfo] = useState({});
+  const [loading, setLoading] = useState(false);
   const { id } = useParams();
+  const navigate = useNavigate();
 
   //Set media query
   const matches = useMediaQuery("(min-width: 1000px)");
-  console.log(matches);
   const onClickSubmitButton = async (e) => {
+    setSubmitText("Submitting...");
     e.preventDefault();
     try {
       const response = await axios.post(
         `${REACT_APP_BASE_URL}/idupload/input/${id}`,
         groupInfo
       );
-      setSubmitText("Submitting...");
+      console.log(response.data);
+      setLoading(true);
     } catch (err) {
       console.log(err);
-      toast.error(err.response.data.error, { position: "top-right" });
+      setSubmitText("Submit");
+      toast.error(err.response.data, { position: "top-right" });
     }
   };
+
+  useEffect(() => {
+    fetchReservationInfo();
+  }, []);
+
+  const fetchReservationInfo = async () => {
+    try {
+      const response = await axios.get(`${REACT_APP_BASE_URL}/idupload/${id}`);
+      setReservationInfo(response.data);
+    } catch (err) {
+      return navigate("/idupload/pagenotfound");
+    }
+  };
+
   return (
     <div>
       <div
         className="jumbotron text-center w-100"
         style={{ textAlign: "center", height: "250px" }}
       >
-        <Typography className="mt-3" variant="h1">
-          Bravolet Sistema di Fatturazione
+        <Typography className="mt-1" variant="h1">
+          Verifica dell'identità
         </Typography>
-        <Typography className="mt-5" variant="h3">
-          Carica il tuo documento d'identità
+        <Typography className="mt-2" variant="h4">
+          (TULPS art. 109)
+        </Typography>
+        <Typography className="mt-4" variant="h3">
+          Carica il tuo documento di identità
         </Typography>
       </div>
       <div
         className="container"
         style={matches ? { width: "700px" } : { width: "100%" }}
       >
-        {submitText === "Submit" ? (
+        {!loading ? (
           <form className="was-validated" onSubmit={onClickSubmitButton}>
             {idUploaded ? (
               <div>
@@ -316,6 +338,7 @@ export default function Idupload() {
                 setIdUploaded={setIdUploaded}
                 setGroupInfo={setGroupInfo}
                 id={id}
+                reservationInfo={reservationInfo}
               />
             )}
           </form>

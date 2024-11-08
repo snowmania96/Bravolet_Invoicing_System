@@ -1,14 +1,6 @@
-import React, { useState } from "react";
-import {
-  MenuItem,
-  Select,
-  FormControl,
-  Typography,
-  OutlinedInput,
-} from "@mui/material";
+import React from "react";
+import { MenuItem, Select, FormControl } from "@mui/material";
 import country from "country-list-js";
-
-console.log(country.findByIso3());
 
 export default function InputCountrySelect({ name, value, onChange }) {
   return (

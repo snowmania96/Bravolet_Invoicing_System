@@ -30,7 +30,7 @@ export const fetchReservationInfoFromConfirmationCode = async (
     let { data } = await openApiDocs.getReservations({
       filters: `[{"field":"confirmationCode", "operator":"$eq","value": "${confirmationCode}"}]`,
       limit: "100",
-      fields: "id%20checkIn%20checkOut%20nightsCount",
+      fields: "id%20checkIn%20checkOut%20nightsCount%20nickName%20listing",
     });
     return data.results[0];
   } catch (error) {

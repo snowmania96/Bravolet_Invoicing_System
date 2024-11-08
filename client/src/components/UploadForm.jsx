@@ -9,7 +9,12 @@ import CircularProgress from "@mui/material/CircularProgress";
 
 const REACT_APP_BASE_URL = process.env.REACT_APP_BASE_URL;
 
-export default function UploadForm({ setIdUploaded, setGroupInfo, id }) {
+export default function UploadForm({
+  setIdUploaded,
+  setGroupInfo,
+  id,
+  reservationInfo,
+}) {
   const [selectedFiles, setSelectedFiles] = useState(undefined);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,6 +22,7 @@ export default function UploadForm({ setIdUploaded, setGroupInfo, id }) {
     "Trascina e rilascia il file qui oppure fai clic per selezionare il file"
   );
   const [checkbox, setCheckbox] = useState(false);
+
   const onDrop = (files) => {
     if (files.length > 0) {
       //image files and pdfs.
@@ -172,7 +178,6 @@ export default function UploadForm({ setIdUploaded, setGroupInfo, id }) {
       setLoading(false);
     }
   };
-
   return (
     <Box>
       {loading ? (
@@ -208,7 +213,14 @@ export default function UploadForm({ setIdUploaded, setGroupInfo, id }) {
                       style={{ fontSize: "16px" }}
                       onClick={() => setCheckbox(!checkbox)}
                     >
-                      Sono d'accordo con <a href="#">Termini e eondizioni</a>
+                      Accetto il{" "}
+                      <a
+                        href={`/rentalagreement/${id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Contratto di locazione
+                      </a>
                     </div>
                   </div>
                 </div>

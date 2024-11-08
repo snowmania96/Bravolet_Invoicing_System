@@ -6,7 +6,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import fs from "fs";
 import { fetchReservationInfoFromConfirmationCode } from "../cron/apiintegration/GuestyApi.js";
-import { generatePolicyServiceText } from "../config/config.js";
+import { generatePolicyServiceText, getNotes } from "../config/config.js";
 import axios from "axios";
 import mindee from "mindee";
 
@@ -103,6 +103,8 @@ export const idUpload = async (req, res) => {
 
 export const sendToPolicyService = async (req, res) => {
   try {
+    const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+    console.log(ip);
     const groupInfo = req.body;
     const confirmationCode = req.params.id;
     let guestyAuthKey = fs.readFileSync("./config.js", "utf8");
@@ -144,10 +146,40 @@ export const sendToPolicyService = async (req, res) => {
     for (let i = 1; i < checkResult.length; i += 2) {
       if (checkResult[i] === "false") flag = false;
     }
-    if (flag) res.status(200).json("Succeed");
+    if (flag) res.status(200).json(ip);
     else res.status(400).json("Input Data error");
   } catch (err) {
     res.status(500).json("Policy server error");
+  }
+};
+
+export const fetchReservation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let guestyAuthKey = fs.readFileSync("./config.js", "utf8");
+    const reservationInfo = await fetchReservationInfoFromConfirmationCode(
+      guestyAuthKey,
+      id
+    );
+    if (!reservationInfo) return res.status(404).json("Not Found");
+    res.status(200).json(reservationInfo);
+  } catch {
+    res.status(404).json("note found the confirmation code");
+  }
+};
+
+export const fetchNote = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let guestyAuthKey = fs.readFileSync("./config.js", "utf8");
+    const reservationInfo = await fetchReservationInfoFromConfirmationCode(
+      guestyAuthKey,
+      id
+    );
+    const note = await getNotes(reservationInfo);
+    return res.status(200).json(note);
+  } catch (err) {
+    console.log(err);
   }
 };
 
