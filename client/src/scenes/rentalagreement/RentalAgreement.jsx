@@ -7,7 +7,6 @@ const REACT_APP_BASE_URL = process.env.REACT_APP_BASE_URL;
 export default function RentalAgreement() {
   const { id } = useParams();
   const [text, setText] = useState([]);
-  const temp = "hello guys\n\nasldfjlsakdfj";
   useEffect(() => {
     fetchNote();
   }, []);
@@ -18,6 +17,7 @@ export default function RentalAgreement() {
         `${REACT_APP_BASE_URL}/idupload/rentalagreement/${id}`
       );
       const string = response.data.split("\n");
+      console.log(string);
       setText(string);
     } catch (err) {
       console.log(err);

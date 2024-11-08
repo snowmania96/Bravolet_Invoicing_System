@@ -7,7 +7,6 @@ import {
   Layout,
   Apartments,
   Guests,
-  Admin,
   Schema,
   SignIn,
   Invoice,

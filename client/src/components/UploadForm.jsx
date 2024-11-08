@@ -74,8 +74,8 @@ export default function UploadForm({
                   surname: extractedInfo.surname,
                   givenname: extractedInfo.givenname,
                   gender:
-                    extractedInfo.gender === undefined
-                      ? ""
+                    extractedInfo.gender === ""
+                      ? "Maschio"
                       : extractedInfo.gender === "M"
                       ? "Maschio"
                       : "Femmina",

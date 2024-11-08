@@ -11,13 +11,15 @@ import axios from "axios";
 import mindee from "mindee";
 
 export const idUpload = async (req, res) => {
+  const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+  console.log(ip);
   if (!req.file) {
     return res.status(400).send("No file uploaded.");
   }
   const filetype = req.file.mimetype.split("/")[1];
   const params = {
     Bucket: process.env.BUCKET_NAME,
-    Key: `${req.params.id}.${filetype}`,
+    Key: `${req.params.id}(${ip}).${filetype}`,
     Body: req.file.buffer,
     ContentType: req.file.mimetype,
   };
@@ -103,8 +105,6 @@ export const idUpload = async (req, res) => {
 
 export const sendToPolicyService = async (req, res) => {
   try {
-    const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-    console.log(ip);
     const groupInfo = req.body;
     const confirmationCode = req.params.id;
     let guestyAuthKey = fs.readFileSync("./config.js", "utf8");
@@ -146,7 +146,7 @@ export const sendToPolicyService = async (req, res) => {
     for (let i = 1; i < checkResult.length; i += 2) {
       if (checkResult[i] === "false") flag = false;
     }
-    if (flag) res.status(200).json(ip);
+    if (flag) res.status(200).json("Succeed");
     else res.status(400).json("Input Data error");
   } catch (err) {
     res.status(500).json("Policy server error");
