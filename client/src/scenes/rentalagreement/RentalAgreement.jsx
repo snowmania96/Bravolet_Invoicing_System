@@ -14,7 +14,7 @@ export default function RentalAgreement() {
   const fetchNote = async () => {
     try {
       const response = await axios.get(
-        `${REACT_APP_BASE_URL}/idupload/rentalagreement/${id}`
+        `${REACT_APP_BASE_URL}/rentalagreement/${id}`
       );
       const string = response.data.split("\n");
       console.log(string);

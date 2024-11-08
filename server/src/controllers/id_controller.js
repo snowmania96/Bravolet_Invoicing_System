@@ -168,21 +168,6 @@ export const fetchReservation = async (req, res) => {
   }
 };
 
-export const fetchNote = async (req, res) => {
-  try {
-    const { id } = req.params;
-    let guestyAuthKey = fs.readFileSync("./config.js", "utf8");
-    const reservationInfo = await fetchReservationInfoFromConfirmationCode(
-      guestyAuthKey,
-      id
-    );
-    const note = await getNotes(reservationInfo);
-    return res.status(200).json(note);
-  } catch (err) {
-    console.log(err);
-  }
-};
-
 const getAuthenticationToken = async () => {
   try {
     const soapRequest = `<?xml version="1.0" encoding="utf-8"?>
