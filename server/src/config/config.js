@@ -2,7 +2,12 @@ import Schema from "../model/Schema.js";
 import ReceiptNumber from "../model/ReceiptNumber.js";
 import InvoiceNumber from "../model/InvoiceNumber.js";
 import Apartment from "../model/Apartment.js";
-import { group } from "console";
+import axios from "axios";
+import fs from "fs";
+import {
+  fetchConversationInfo,
+  postNoteToConversationWithoutSending,
+} from "../cron/apiintegration/GuestyApi.js";
 
 export const getNotes = async (reservationInfo) => {
   try {
@@ -168,7 +173,7 @@ export const getCityTax = (reservationInfo) => {
   };
 };
 
-export const generatePolicyServiceText = (nightsCount, groupInfo) => {
+export const generatePolicyServiceText = (nightsCount, groupInfo, checkIn) => {
   let result = "";
   for (let i = 0; i < groupInfo.length; i++) {
     let individual = "<string>";
@@ -181,7 +186,7 @@ export const generatePolicyServiceText = (nightsCount, groupInfo) => {
     }
 
     //Insert Arrival Date 10
-    const dateString = new Date().toISOString().split("T")[0].split("-");
+    const dateString = checkIn.split("T")[0].split("-");
     const formattedDate = `${dateString[2]}/${dateString[1]}/${dateString[0]}`;
     individual += formattedDate;
 
@@ -241,4 +246,197 @@ export const generatePolicyServiceText = (nightsCount, groupInfo) => {
     result += individual;
   }
   return result;
+};
+
+export const getApartmentId = (nickname) => {
+  const mapping = {
+    "Ghiberti - 4A": {
+      apartmentId: "000001",
+      policyId: 1,
+    },
+    "Ghiberti - 4B": {
+      apartmentId: "000001",
+      policyId: 1,
+    },
+    "Ghiberti - 4C": {
+      apartmentId: "000001",
+      policyId: 1,
+    },
+    "Ghiberti - 5A": {
+      apartmentId: "000004",
+      policyId: 2,
+    },
+    "Ghiberti - 5B": {
+      apartmentId: "000005",
+      policyId: 2,
+    },
+    "Ghiberti - 6A": {
+      apartmentId: "000007",
+      policyId: 2,
+    },
+    "Ghiberti - 6B": {
+      apartmentId: "000008",
+      policyId: 2,
+    },
+    "Ghiberti - 7A": {
+      apartmentId: "000010",
+      policyId: 2,
+    },
+    "Ghiberti - 7B": {
+      apartmentId: "000009",
+      policyId: 2,
+    },
+    "Ghiberti - 7C": {
+      apartmentId: "000011",
+      policyId: 2,
+    },
+    "Ghiberti - 8A": {
+      apartmentId: "000012",
+      policyId: 2,
+    },
+    "Ghiberti - 8B": {
+      apartmentId: "000013",
+      policyId: 2,
+    },
+    "Ghiberti - 8C": {
+      apartmentId: "000014",
+      policyId: 2,
+    },
+    "Ghiberti - 1A": {
+      apartmentId: "000002",
+      policyId: 1,
+    },
+    "Ghiberti - 1B": {
+      apartmentId: "000002",
+      policyId: 1,
+    },
+    "Ghiberti - 2A": {
+      apartmentId: "000003",
+      policyId: 1,
+    },
+    "Ghiberti - 2B": {
+      apartmentId: "000003",
+      policyId: 1,
+    },
+    "Ghiberti - 2C": {
+      apartmentId: "000003",
+      policyId: 1,
+    },
+    "Ghiberti - 5": {
+      apartmentId: "000004",
+      policyId: 2,
+    },
+    "Ghiberti - 6": {
+      apartmentId: "000007",
+      policyId: 2,
+    },
+    "Lazzaro - 1": {
+      apartmentId: "000004",
+      policyId: 1,
+    },
+    "Lazzaro - 2": {
+      apartmentId: "000004",
+      policyId: 1,
+    },
+    "Lazzaro - 3": {
+      apartmentId: "000004",
+      policyId: 1,
+    },
+    "Lazzaro - 4": {
+      apartmentId: "000004",
+      policyId: 1,
+    },
+    // "Lazzaro - 5": {
+    //   apartmentId: "000004",
+    //   policyId: 1,
+    // },
+    "Lazzaro - 6": {
+      apartmentId: "000004",
+      policyId: 1,
+    },
+    // "Lazzaro - 7": {
+    //   apartmentId: "000004",
+    //   policyId: 1,
+    // },
+    // "Lazzaro - 8": {
+    //   apartmentId: "000004",
+    //   policyId: 1,
+    // },
+    // "Lazzaro - 9": {
+    //   apartmentId: "000004",
+    //   policyId: 1,
+    // },
+    // "Milan - B Victory": {
+    //   apartmentId: "000004",
+    //   policyId: 1,
+    // },
+    // "Milan - SottoLoft": {
+    //   apartmentId: "000004",
+    //   policyId: 1,
+    // },
+    // "Milan - A Champagne": {
+    //   apartmentId: "000004",
+    //   policyId: 1,
+    // },
+    // "Milan - De Angeli": {
+    //   apartmentId: "000004",
+    //   policyId: 1,
+    // },
+    // "Milan - AB Kitchen": {
+    //   apartmentId: "000004",
+    //   policyId: 1,
+    // },
+    // "Milan Poma": {
+    //   apartmentId: "000004",
+    //   policyId: 1,
+    // },
+    // "Trieste - Spiridione": {
+    //   apartmentId: "000004",
+    //   policyId: 1,
+    // },
+  };
+  return mapping[nickname];
+};
+
+export const getAddressInfo = async (address) => {
+  const response = await axios.get(
+    "https://maps.googleapis.com/maps/api/geocode/json",
+    {
+      params: {
+        address: address,
+        key: process.env.GOOGLE_MAPS_API_KEY,
+      },
+    }
+  );
+
+  let results = response.data.results;
+  let province = "";
+  let postalCode = "";
+
+  // Loop through the address components to find province and postal code
+  results[0].address_components.forEach((component) => {
+    if (component.types.includes("administrative_area_level_2")) {
+      province = component.short_name; // Province
+    }
+    if (component.types.includes("postal_code")) {
+      postalCode = component.long_name; // Postal code
+    }
+  });
+
+  return { province, postalCode };
+};
+
+export const postNoteOnGuestyInbox = async (groupInfo, reservationInfo) => {
+  let guestyAuthKey = fs.readFileSync("./config.js", "utf-8");
+  const conversationInfo = await fetchConversationInfo(
+    guestyAuthKey,
+    reservationInfo
+  );
+
+  guestyAuthKey = fs.readFileSync("./config.js", "utf-8");
+  await postNoteToConversationWithoutSending(
+    guestyAuthKey,
+    groupInfo,
+    conversationInfo._id
+  );
 };

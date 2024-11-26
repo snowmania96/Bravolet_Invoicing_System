@@ -6,7 +6,6 @@ import {
 import { fetchReservationInfo } from "../cron/apiintegration/GuestyApi.js";
 import User from "../model/User.js";
 import fs from "fs";
-import { updateApartment } from "./apartment_controller.js";
 import {
   createInvoice,
   deleteReceipt,

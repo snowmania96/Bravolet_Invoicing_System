@@ -7,7 +7,12 @@ import {
   fetchReservationInfo,
 } from "./apiintegration/GuestyApi.js";
 import { createNewReceipt } from "./apiintegration/FattureApi.js";
-import { getReceiptNumber, updateReceiptNumber } from "../config/config.js";
+import {
+  getApartmentId,
+  getReceiptNumber,
+  updateReceiptNumber,
+} from "../config/config.js";
+import Id from "../model/Id.js";
 
 export const cronWork = async (day) => {
   try {
@@ -63,6 +68,58 @@ export const cronWork = async (day) => {
           extra: result.data.url,
           role: "user",
         });
+      }
+
+      //Send geust info to policy service.
+
+      //find ids have to be send today.
+      const guestInfo = await Id.find({ checkIn: day, sent: "false" });
+      for (let i = 0; i < guestInfo.length; i++) {
+        const policyServiceInfo = getApartmentId(guestInfo[i].nickname);
+        console.log(policyServiceInfo);
+        let soapRequest, policyId, authKey, policyUsername;
+
+        //For the apartment still don't get permission.
+        if (policyServiceInfo === undefined) {
+          continue;
+        } else {
+          policyId = policyServiceInfo.policyId;
+          authKey = await getAuthenticationToken(policyId);
+
+          if (policyId === 1) {
+            policyUsername = process.env.POLICY_SERVICE_USER_NAME_1;
+          } else if (policyId === 2) {
+            policyUsername = process.env.POLICY_SERVICE_USER_NAME_2;
+          }
+
+          //Send it to the Police Service
+          soapRequest = `<?xml version="1.0" encoding="utf-8"?>
+            <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+              <soap12:Body>
+                <GestioneAppartamenti_Send xmlns="AlloggiatiService">
+                  <Utente>${policyUsername}</Utente>
+                  <token>${authKey}</token>
+                  <ElencoSchedine>
+                    ${guestInfo[i].guestInfoText}
+                  </ElencoSchedine>
+                  <IdAppartamento>${policyServiceInfo.apartmentId}</IdAppartamento>
+                </GestioneAppartamenti_Send>
+              </soap12:Body>
+            </soap12:Envelope>`;
+        }
+        await axios.post(
+          "https://alloggiatiweb.poliziadistato.it/service/service.asmx",
+          soapRequest,
+          {
+            headers: {
+              "Content-Type": "application/soap+xml; charset=utf-8",
+            },
+          }
+        );
+        const idInfo = await Id.findOneAndUpdate(
+          { confirmationCode: guestInfo[i].confirmationCode },
+          { ...guestInfo, sent: "false->true" }
+        );
       }
     }
   } catch (err) {

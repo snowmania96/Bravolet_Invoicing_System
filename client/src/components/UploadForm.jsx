@@ -9,12 +9,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 
 const REACT_APP_BASE_URL = process.env.REACT_APP_BASE_URL;
 
-export default function UploadForm({
-  setIdUploaded,
-  setGroupInfo,
-  id,
-  reservationInfo,
-}) {
+export default function UploadForm({ setIdUploaded, setGroupInfo, id }) {
   const [selectedFiles, setSelectedFiles] = useState(undefined);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -67,6 +62,7 @@ export default function UploadForm({
         setLoading(false);
       } else {
         setGroupInfo((prevGroupInfo) =>
+          //set some default values
           prevGroupInfo.map((member, index) =>
             index === 0
               ? {
@@ -85,7 +81,9 @@ export default function UploadForm({
               : member
           )
         );
+        //In case of the nationality is Italyk
         if (extractedInfo.nationality === "ITA") {
+          //set citizeship as Italy
           setGroupInfo((prevGroupInfo) =>
             prevGroupInfo.map((member, index) =>
               index === 0

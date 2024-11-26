@@ -86,8 +86,15 @@ export default function Invoice() {
       {showErrorMessage ? (
         <Card className="errorCard">
           <div style={{ textAlign: "center", margin: "auto" }}>
-            You can download your receipt and pay the tourist tax on your
-            check-out date
+            <a
+              href="https://buy.stripe.com/00g4ip47qfxJcLu148"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Click here t opay the tourist tax.
+            </a>{" "}
+            The receipt or invoice for your stay will be made avaliable here
+            starting from your checkout date.
           </div>
         </Card>
       ) : (

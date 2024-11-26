@@ -14,6 +14,8 @@ import { cronWork } from "./cron/cronWork.js";
 import schemaRoutes from "./routes/schema.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import axios from "axios";
+import { getAddressInfo } from "./config/config.js";
 
 /* CONFIGURATION */
 dotenv.config();
@@ -59,6 +61,7 @@ app.listen(PORT, () =>
 );
 
 //Node cron
+console.log(Buffer.from(process.env.S3_ENCRYPT_KEY).toString("base64"));
 
 // cron.schedule(
 //   "1 0 * * *",
@@ -74,3 +77,10 @@ app.listen(PORT, () =>
 //     timezone: "Europe/Rome",
 //   }
 // );
+const aaa = async () => {
+  const { province, postalCode } = await getAddressInfo(
+    "Via dei Mille, 34/int 9, 47921 Rimini RN, Italy"
+  );
+  console.log(province, postalCode);
+};
+aaa();

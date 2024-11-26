@@ -3,6 +3,8 @@ import {
   idUpload,
   sendToPolicyService,
   fetchReservation,
+  getIdInfos,
+  getIdInfo,
 } from "../controllers/id_controller.js";
 import multer from "multer";
 
@@ -14,5 +16,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.post("/:id", upload.single("file"), idUpload);
 router.post("/input/:id", sendToPolicyService);
 router.get("/:id", fetchReservation);
-
+router.get("/service", getIdInfos);
+router.get("/service/:id", getIdInfo);
 export default router;

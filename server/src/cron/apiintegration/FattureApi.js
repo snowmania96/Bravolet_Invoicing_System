@@ -1,5 +1,5 @@
 import fattureInCloudSdk from "@fattureincloud/fattureincloud-js-sdk";
-import { getCityTax, getNotes } from "../../config/config.js";
+import { getAddressInfo, getCityTax, getNotes } from "../../config/config.js";
 
 export const createNewReceipt = async (reservationInfo, receiptCount) => {
   try {
@@ -294,7 +294,11 @@ export const createInvoice = async (
     entity.first_name = invoiceInfo.name;
     entity.last_name = invoiceInfo.surname;
     entity.vat_number = invoiceInfo.vat;
-    entity.tax_code = invoiceInfo.billingCode;
+    entity.tax_code = invoiceInfo.vat;
+    entity.ei_code = invoiceInfo.billingCode;
+    const { province, postalCode } = await getAddressInfo(invoiceInfo.address);
+    entity.address_province = province;
+    entity.address_postal_code = postalCode;
 
     //Invoice Info
     let invoice = new fattureInCloudSdk.IssuedDocument();

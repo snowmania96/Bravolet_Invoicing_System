@@ -17,7 +17,6 @@ export default function RentalAgreement() {
         `${REACT_APP_BASE_URL}/rentalagreement/${id}`
       );
       const string = response.data.split("\n");
-      console.log(string);
       setText(string);
     } catch (err) {
       console.log(err);

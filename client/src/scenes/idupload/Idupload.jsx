@@ -61,7 +61,7 @@ export default function Idupload() {
     try {
       const response = await axios.post(
         `${REACT_APP_BASE_URL}/idupload/input/${id}`,
-        groupInfo
+        { groupInfo, reservationInfo }
       );
       console.log(response.data);
       setLoading(true);
@@ -84,7 +84,6 @@ export default function Idupload() {
       return navigate("/idupload/pagenotfound");
     }
   };
-
   return (
     <div>
       <div
@@ -338,7 +337,6 @@ export default function Idupload() {
                 setIdUploaded={setIdUploaded}
                 setGroupInfo={setGroupInfo}
                 id={id}
-                reservationInfo={reservationInfo}
               />
             )}
           </form>

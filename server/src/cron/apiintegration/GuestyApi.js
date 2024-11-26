@@ -62,3 +62,62 @@ export const fetchReservationInfo = async (apiKey, id) => {
     console.log("Fetch Reservation Info Error: ", error);
   }
 };
+
+export const fetchConversationInfo = async (apiKey, reservationInfo) => {
+  try {
+    openApiDocs.auth(`Bearer ${apiKey}`);
+    const response = await openApiDocs.getCommunicationConversations({
+      filters: `[{"field":"reservation._id", "operator":"$eq","value": "${reservationInfo._id}"}]`,
+    });
+
+    console.log(response.data.data.conversations[0]);
+    return response.data.data.conversations[0];
+  } catch (error) {
+    console.log(error.status);
+    if (error.status == 401) {
+      const newApiKey = await saveGuestyAuthKey();
+      // console.log(newApiKey);
+      return await fetchConversationInfo(newApiKey, reservationInfo);
+    }
+    console.log("Fetch conversation Info Error: ", error);
+  }
+};
+
+export const postNoteToConversationWithoutSending = async (
+  apiKey,
+  groupInfo,
+  conversationId
+) => {
+  try {
+    let noteText = `${groupInfo[0].givenname} ${groupInfo[0].surname} successfully posted their ID information.`;
+    noteText += "<br> The registered guests are";
+    for (let i = 0; i < groupInfo.length; i++) {
+      noteText += "<br>";
+      noteText += groupInfo[i].givenname + " " + groupInfo[i].surname + " ";
+      noteText += groupInfo[i].citizenship.Descrizione + " ";
+      const date = new Date(groupInfo[i].dateOfBirth);
+      date.setDate(date.getDate() + 1);
+      const birthDateString = date.toISOString().split("T")[0];
+      noteText += birthDateString;
+    }
+    openApiDocs.auth(`Bearer ${apiKey}`);
+    const response =
+      await openApiDocs.postCommunicationConversationsConversationidPosts(
+        {
+          module: { type: "note" },
+          body: noteText,
+        },
+        {
+          conversationId: conversationId,
+        }
+      );
+  } catch (error) {
+    console.log(error.status);
+    if (error.status == 401) {
+      const newApiKey = await saveGuestyAuthKey();
+      // console.log(newApiKey);
+      return await postNoteToConversationWithoutSending(newApiKey, groupInfo);
+    }
+    console.log("Fetch conversation Info Error: ", error);
+  }
+};

@@ -1,28 +1,33 @@
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import fs from "fs";
 import { fetchReservationInfoFromConfirmationCode } from "../cron/apiintegration/GuestyApi.js";
-import { generatePolicyServiceText, getNotes } from "../config/config.js";
+import {
+  generatePolicyServiceText,
+  getApartmentId,
+  postNoteOnGuestyInbox,
+} from "../config/config.js";
 import axios from "axios";
 import mindee from "mindee";
+import Id from "../model/Id.js";
 
 export const idUpload = async (req, res) => {
   const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
-  console.log(ip);
   if (!req.file) {
     return res.status(400).send("No file uploaded.");
   }
   const filetype = req.file.mimetype.split("/")[1];
+
+  const ssecKey = Buffer.from(process.env.S3_ENCRYPT_KEY).toString("base64");
   const params = {
     Bucket: process.env.BUCKET_NAME,
     Key: `${req.params.id}(${ip}).${filetype}`,
     Body: req.file.buffer,
     ContentType: req.file.mimetype,
+    ACL: "private",
+    SSECustomerAlgorithm: "AES256",
+    SSECustomerKey: ssecKey,
   };
+
   const s3Client = new S3Client({
     region: "us-west-2", // e.g., 'us-west-2'
     endpoint: process.env.S3_END_POINT,
@@ -35,20 +40,16 @@ export const idUpload = async (req, res) => {
   try {
     const command = new PutObjectCommand(params);
     await s3Client.send(command);
-    const urlCommand = new GetObjectCommand({
-      Bucket: params.Bucket,
-      Key: params.Key,
-    });
-    const signedUrl = await getSignedUrl(s3Client, urlCommand, {
-      expiresIn: 3600,
-    });
 
     //Extract information from ID url=> signedUrl
     const mindeeClient = new mindee.Client({
       apiKey: process.env.MINDEE_API_KEY,
     });
 
-    const idSource = mindeeClient.docFromUrl(signedUrl);
+    const idSource = mindeeClient.docFromBuffer(
+      req.file.buffer,
+      req.file.originalname
+    );
 
     const apiResponse = await mindeeClient.enqueueAndParse(
       mindee.product.InternationalIdV2,
@@ -105,33 +106,68 @@ export const idUpload = async (req, res) => {
 
 export const sendToPolicyService = async (req, res) => {
   try {
-    const groupInfo = req.body;
-    const confirmationCode = req.params.id;
-    let guestyAuthKey = fs.readFileSync("./config.js", "utf8");
-    const reservationInfo = await fetchReservationInfoFromConfirmationCode(
-      guestyAuthKey,
-      confirmationCode
-    );
+    const { groupInfo, reservationInfo } = req.body;
     const serivceText = generatePolicyServiceText(
       reservationInfo.nightsCount,
-      groupInfo
+      groupInfo,
+      new Date().toISOString()
     );
-    const authKey = await getAuthenticationToken();
-    //Send it to the Police Service
-    const soapRequest = `<?xml version="1.0" encoding="utf-8"?>
-      <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
-        <soap12:Body>
-          <GestioneAppartamenti_Test xmlns="AlloggiatiService">
-            <Utente>${process.env.POLICY_SERVICE_USER_NAME}</Utente>
-            <token>${authKey}</token>
-            <ElencoSchedine>
-              ${serivceText}
-            </ElencoSchedine>
-            <IdAppartamento>000001</IdAppartamento>
-          </GestioneAppartamenti_Test>
-        </soap12:Body>
-      </soap12:Envelope>`;
 
+    const policyServiceInfo = getApartmentId(reservationInfo.listing.nickname);
+    let soapRequest, policyId, authKey, policyUsername;
+
+    const currentTime = new Date();
+    const checkInTime = new Date(reservationInfo.checkIn.split("T")[0]);
+
+    //Enusre sent to policy service or not
+    let sent = "false";
+
+    //For the apartment still don't get permission.
+    if (policyServiceInfo === undefined || currentTime < checkInTime) {
+      policyId = 1;
+      policyUsername = process.env.POLICY_SERVICE_USER_NAME_1;
+      authKey = await getAuthenticationToken(policyId);
+
+      //Test to send policy service.
+      soapRequest = `<?xml version="1.0" encoding="utf-8"?>
+        <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+          <soap12:Body>
+            <GestioneAppartamenti_Test xmlns="AlloggiatiService">
+              <Utente>${policyUsername}</Utente>
+              <token>${authKey}</token>
+              <ElencoSchedine>
+                ${serivceText}
+              </ElencoSchedine>
+              <IdAppartamento>000001</IdAppartamento>
+            </GestioneAppartamenti_Test>
+          </soap12:Body>
+        </soap12:Envelope>`;
+    } else {
+      sent = "true";
+      policyId = policyServiceInfo.policyId;
+      authKey = await getAuthenticationToken(policyId);
+
+      if (policyId === 1) {
+        policyUsername = process.env.POLICY_SERVICE_USER_NAME_1;
+      } else if (policyId === 2) {
+        policyUsername = process.env.POLICY_SERVICE_USER_NAME_2;
+      }
+
+      //Send it to the Police Service
+      soapRequest = `<?xml version="1.0" encoding="utf-8"?>
+        <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+          <soap12:Body>
+            <GestioneAppartamenti_Send xmlns="AlloggiatiService">
+              <Utente>${policyUsername}</Utente>
+              <token>${authKey}</token>
+              <ElencoSchedine>
+                ${serivceText}
+              </ElencoSchedine>
+              <IdAppartamento>${policyServiceInfo.apartmentId}</IdAppartamento>
+            </GestioneAppartamenti_Send>
+          </soap12:Body>
+        </soap12:Envelope>`;
+    }
     const response = await axios.post(
       "https://alloggiatiweb.poliziadistato.it/service/service.asmx",
       soapRequest,
@@ -146,8 +182,28 @@ export const sendToPolicyService = async (req, res) => {
     for (let i = 1; i < checkResult.length; i += 2) {
       if (checkResult[i] === "false") flag = false;
     }
-    if (flag) res.status(200).json("Succeed");
-    else res.status(400).json("Input Data error");
+    if (flag) {
+      const realServiceText = generatePolicyServiceText(
+        reservationInfo.nightsCount,
+        groupInfo,
+        reservationInfo.checkIn
+      );
+      const idInfo = await Id.create({
+        confirmationCode: req.params.id,
+        guestInfoText: realServiceText,
+        checkIn: reservationInfo.checkIn.split("T")[0],
+        sent: sent,
+        nickname: reservationInfo.listing.nickname,
+      });
+      if (idInfo) {
+        //Post Note on Guesty Inbox
+        await postNoteOnGuestyInbox(groupInfo, reservationInfo);
+
+        return res.status(200).json("Succeed");
+      } else {
+        return res.status(422).json("Saving in our Database is failed");
+      }
+    } else return res.status(400).json("Input Data error");
   } catch (err) {
     res.status(500).json("Policy server error");
   }
@@ -155,28 +211,74 @@ export const sendToPolicyService = async (req, res) => {
 
 export const fetchReservation = async (req, res) => {
   try {
+    // get the location of IP
+    const ip = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+    // const ip = "14.139.128.17";
+    const requestOptions = {
+      method: "GET",
+      redirect: "follow",
+    };
+    let location = "";
+    fetch(
+      `https://api.ipgeolocation.io/ipgeo?apiKey=${process.env.IP_GEOLOCATION_API_KEY}&ip=${ip}`,
+      requestOptions
+    )
+      .then((response) => response.text())
+      .then((result) => {
+        location = JSON.parse(result).country_name;
+      })
+      .catch((error) => console.error(error));
+
     const { id } = req.params;
     let guestyAuthKey = fs.readFileSync("./config.js", "utf8");
     const reservationInfo = await fetchReservationInfoFromConfirmationCode(
       guestyAuthKey,
       id
     );
+    // console.log(reservationInfo);
+    const idInfo = await Id.findOne({ confirmationCode: id });
+
+    const now = new Date();
+    //Set Expiration Date as the next day of the Check In Date
+    const nextDay = new Date(reservationInfo.checkIn.split("T")[0]);
+    nextDay.setDate(nextDay.getDate() + 1);
+    const formattedDate = nextDay.toISOString().split("T")[0];
+    const expirationDate = new Date(formattedDate);
+
     if (!reservationInfo) return res.status(404).json("Not Found");
-    res.status(200).json(reservationInfo);
+
+    if (idInfo) return res.status(400).json("You can upload once");
+
+    if (now > expirationDate)
+      return res
+        .status(400)
+        .json("You can upload before the next day of check in");
+
+    return res.status(200).json({ reservationInfo, location });
   } catch {
     res.status(404).json("note found the confirmation code");
   }
 };
 
-const getAuthenticationToken = async () => {
+const getAuthenticationToken = async (policyId) => {
+  let policyUsername, policyPassword, policyWSkey;
+  if (policyId === 1) {
+    policyUsername = process.env.POLICY_SERVICE_USER_NAME_1;
+    policyPassword = process.env.POLICY_SERVICE_PASSWORD_1;
+    policyWSkey = process.env.POLICY_SERVICE_WSKEY_1;
+  } else if (policyId === 2) {
+    policyUsername = process.env.POLICY_SERVICE_USER_NAME_2;
+    policyPassword = process.env.POLICY_SERVICE_PASSWORD_2;
+    policyWSkey = process.env.POLICY_SERVICE_WSKEY_2;
+  }
   try {
     const soapRequest = `<?xml version="1.0" encoding="utf-8"?>
         <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
           <soap12:Body>
             <GenerateToken xmlns="AlloggiatiService">
-              <Utente>${process.env.POLICY_SERVICE_USER_NAME}</Utente>
-              <Password>${process.env.POLICY_SERVICE_PASSWORD}</Password>
-              <WsKey>${process.env.POLICY_SERVICE_WSKEY}</WsKey>
+              <Utente>${policyUsername}</Utente>
+              <Password>${policyPassword}</Password>
+              <WsKey>${policyWSkey}</WsKey>
               <result>
                 <ErroreDettaglio>string</ErroreDettaglio>
               </result>
@@ -196,5 +298,25 @@ const getAuthenticationToken = async () => {
     return result.split(/<\/?token>/)[1];
   } catch (err) {
     console.log("Get Authentication Token");
+  }
+};
+
+export const getIdInfos = async () => {
+  try {
+    const IDs = await Id.find({});
+    return res.status(200).json(IDs);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const getIdInfo = async () => {
+  try {
+    const ID = await Id.findOne({ confirmationCode: req.params.id });
+    if (ID) {
+      return res.status(200).json(ID);
+    }
+  } catch (err) {
+    console.log(err);
   }
 };
