@@ -9,6 +9,7 @@ import {
 import { createNewReceipt } from "./apiintegration/FattureApi.js";
 import {
   getApartmentId,
+  getAuthenticationToken,
   getReceiptNumber,
   updateReceiptNumber,
 } from "../config/config.js";
@@ -118,11 +119,12 @@ export const cronWork = async (day) => {
         );
         const idInfo = await Id.findOneAndUpdate(
           { confirmationCode: guestInfo[i].confirmationCode },
-          { ...guestInfo, sent: "false->true" }
+          { ...guestInfo[i], sent: "false->true" },
+          { new: true }
         );
       }
     }
   } catch (err) {
-    console.log(err);
+    console.log("cron work error", err);
   }
 };

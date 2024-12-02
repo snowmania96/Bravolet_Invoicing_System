@@ -47,6 +47,8 @@ export const createNewReceipt = async (reservationInfo, receiptCount) => {
     receipt.notes = notes;
     // console.log("Notes ", receipt.notes);
     const cityTax = getCityTax(reservationInfo);
+
+    //Need to change some values realted to the Airbnb hosting
     receipt.items_list = [
       {
         name: receipt.subject, //description
@@ -62,6 +64,7 @@ export const createNewReceipt = async (reservationInfo, receiptCount) => {
       },
     ];
 
+    //We need to change the amount of receipt.
     receipt.payments_list = [
       {
         amount: cityTax.flag

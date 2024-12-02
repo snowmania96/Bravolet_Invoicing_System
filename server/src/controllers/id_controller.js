@@ -1,9 +1,10 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, ExpressionType } from "@aws-sdk/client-s3";
 import fs from "fs";
 import { fetchReservationInfoFromConfirmationCode } from "../cron/apiintegration/GuestyApi.js";
 import {
   generatePolicyServiceText,
   getApartmentId,
+  getAuthenticationToken,
   postNoteOnGuestyInbox,
 } from "../config/config.js";
 import axios from "axios";
@@ -260,48 +261,7 @@ export const fetchReservation = async (req, res) => {
   }
 };
 
-const getAuthenticationToken = async (policyId) => {
-  let policyUsername, policyPassword, policyWSkey;
-  if (policyId === 1) {
-    policyUsername = process.env.POLICY_SERVICE_USER_NAME_1;
-    policyPassword = process.env.POLICY_SERVICE_PASSWORD_1;
-    policyWSkey = process.env.POLICY_SERVICE_WSKEY_1;
-  } else if (policyId === 2) {
-    policyUsername = process.env.POLICY_SERVICE_USER_NAME_2;
-    policyPassword = process.env.POLICY_SERVICE_PASSWORD_2;
-    policyWSkey = process.env.POLICY_SERVICE_WSKEY_2;
-  }
-  try {
-    const soapRequest = `<?xml version="1.0" encoding="utf-8"?>
-        <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
-          <soap12:Body>
-            <GenerateToken xmlns="AlloggiatiService">
-              <Utente>${policyUsername}</Utente>
-              <Password>${policyPassword}</Password>
-              <WsKey>${policyWSkey}</WsKey>
-              <result>
-                <ErroreDettaglio>string</ErroreDettaglio>
-              </result>
-            </GenerateToken>
-          </soap12:Body>
-        </soap12:Envelope>`;
-    const response = await axios.post(
-      "https://alloggiatiweb.poliziadistato.it/service/service.asmx",
-      soapRequest,
-      {
-        headers: {
-          "Content-Type": "application/soap+xml; charset=utf-8",
-        },
-      }
-    );
-    const result = response.data;
-    return result.split(/<\/?token>/)[1];
-  } catch (err) {
-    console.log("Get Authentication Token");
-  }
-};
-
-export const getIdInfos = async () => {
+export const getIdInfos = async (req, res) => {
   try {
     const IDs = await Id.find({});
     return res.status(200).json(IDs);
@@ -310,12 +270,21 @@ export const getIdInfos = async () => {
   }
 };
 
-export const getIdInfo = async () => {
+export const getIdInfo = async (req, res) => {
   try {
     const ID = await Id.findOne({ confirmationCode: req.params.id });
     if (ID) {
       return res.status(200).json(ID);
     }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const test = async (req, res) => {
+  try {
+    const guestInfo = await Id.find({ checkIn: req.params.id, sent: "false" });
+    return res.status(200).json(guestInfo);
   } catch (err) {
     console.log(err);
   }

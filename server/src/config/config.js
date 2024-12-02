@@ -71,7 +71,7 @@ export const getNotes = async (reservationInfo) => {
     }
     return notes;
   } catch (err) {
-    console.log(err);
+    console.log("get note error", err);
   }
 };
 
@@ -94,7 +94,7 @@ export const getReceiptNumber = async (day) => {
     }
     return receiptNumber.receiptNumber;
   } catch (err) {
-    console.log(err);
+    console.log("get receipt number error", err);
   }
 };
 
@@ -107,7 +107,7 @@ export const updateReceiptNumber = async (number) => {
       }
     );
   } catch (err) {
-    console.log(err);
+    console.log("get update Receipt number error", err);
   }
 };
 
@@ -130,7 +130,7 @@ export const getInvoiceNumber = async (day) => {
     }
     return invoiceNumber.invoiceNumber;
   } catch (err) {
-    console.log(err);
+    console.log("get invoice number error: ", err);
   }
 };
 
@@ -143,7 +143,7 @@ export const updateInvoiceNumber = async (number) => {
       }
     );
   } catch (err) {
-    console.log(err);
+    console.log("update invoice number error", err);
   }
 };
 
@@ -439,4 +439,45 @@ export const postNoteOnGuestyInbox = async (groupInfo, reservationInfo) => {
     groupInfo,
     conversationInfo._id
   );
+};
+
+export const getAuthenticationToken = async (policyId) => {
+  let policyUsername, policyPassword, policyWSkey;
+  if (policyId === 1) {
+    policyUsername = process.env.POLICY_SERVICE_USER_NAME_1;
+    policyPassword = process.env.POLICY_SERVICE_PASSWORD_1;
+    policyWSkey = process.env.POLICY_SERVICE_WSKEY_1;
+  } else if (policyId === 2) {
+    policyUsername = process.env.POLICY_SERVICE_USER_NAME_2;
+    policyPassword = process.env.POLICY_SERVICE_PASSWORD_2;
+    policyWSkey = process.env.POLICY_SERVICE_WSKEY_2;
+  }
+  try {
+    const soapRequest = `<?xml version="1.0" encoding="utf-8"?>
+        <soap12:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://www.w3.org/2003/05/soap-envelope">
+          <soap12:Body>
+            <GenerateToken xmlns="AlloggiatiService">
+              <Utente>${policyUsername}</Utente>
+              <Password>${policyPassword}</Password>
+              <WsKey>${policyWSkey}</WsKey>
+              <result>
+                <ErroreDettaglio>string</ErroreDettaglio>
+              </result>
+            </GenerateToken>
+          </soap12:Body>
+        </soap12:Envelope>`;
+    const response = await axios.post(
+      "https://alloggiatiweb.poliziadistato.it/service/service.asmx",
+      soapRequest,
+      {
+        headers: {
+          "Content-Type": "application/soap+xml; charset=utf-8",
+        },
+      }
+    );
+    const result = response.data;
+    return result.split(/<\/?token>/)[1];
+  } catch (err) {
+    console.log("Get Authentication Token");
+  }
 };
