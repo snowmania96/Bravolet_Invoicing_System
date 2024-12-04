@@ -22,6 +22,10 @@ const IdSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    submitted: {
+      type: Boolean,
+      required: true,
+    },
   },
   { timestamps: true }
 );

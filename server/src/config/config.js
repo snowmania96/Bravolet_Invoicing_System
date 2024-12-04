@@ -174,78 +174,82 @@ export const getCityTax = (reservationInfo) => {
 };
 
 export const generatePolicyServiceText = (nightsCount, groupInfo, checkIn) => {
-  let result = "";
-  for (let i = 0; i < groupInfo.length; i++) {
-    let individual = "<string>";
-    //Insert Type of Accomodation 2
-    if (i === 0) {
-      if (groupInfo.length === 1) individual += "16";
-      else individual += "18";
-    } else {
-      individual += "20";
-    }
+  try {
+    let result = "";
+    for (let i = 0; i < groupInfo.length; i++) {
+      let individual = "<string>";
+      //Insert Type of Accomodation 2
+      if (i === 0) {
+        if (groupInfo.length === 1) individual += "16";
+        else individual += "18";
+      } else {
+        individual += "20";
+      }
 
-    //Insert Arrival Date 10
-    const dateString = checkIn.split("T")[0].split("-");
-    const formattedDate = `${dateString[2]}/${dateString[1]}/${dateString[0]}`;
-    individual += formattedDate;
+      //Insert Arrival Date 10
+      const dateString = checkIn.split("T")[0].split("-");
+      const formattedDate = `${dateString[2]}/${dateString[1]}/${dateString[0]}`;
+      individual += formattedDate;
 
-    //Insert Staying Dates 2
-    if (nightsCount < 10) individual += `0${nightsCount}`;
-    else individual += nightsCount;
+      //Insert Staying Dates 2
+      if (nightsCount < 10) individual += `0${nightsCount}`;
+      else individual += nightsCount;
 
-    //Insert Surname 50
-    individual += groupInfo[i].surname;
-    individual += " ".repeat(50 - groupInfo[i].surname.length);
+      //Insert Surname 50
+      individual += groupInfo[i].surname;
+      individual += " ".repeat(50 - groupInfo[i].surname.length);
 
-    //Insert givenname 30
-    individual += groupInfo[i].givenname;
-    individual += " ".repeat(30 - groupInfo[i].givenname.length);
+      //Insert givenname 30
+      individual += groupInfo[i].givenname;
+      individual += " ".repeat(30 - groupInfo[i].givenname.length);
 
-    //Insert gender 1
-    if (groupInfo[i].gender === "Maschio") individual += "1";
-    else individual += "2";
+      //Insert gender 1
+      if (groupInfo[i].gender === "Maschio") individual += "1";
+      else individual += "2";
 
-    //Insert Date of Birth 10
-    const date = new Date(groupInfo[i].dateOfBirth);
-    date.setDate(date.getDate() + 1);
-    const birthDateString = date.toISOString().split("T")[0].split("-");
-    const formattedBirthDate = `${birthDateString[2]}/${birthDateString[1]}/${birthDateString[0]}`;
-    individual += formattedBirthDate;
+      //Insert Date of Birth 10
+      const date = new Date(groupInfo[i].dateOfBirth);
+      date.setDate(date.getDate() + 1);
+      const birthDateString = date.toISOString().split("T")[0].split("-");
+      const formattedBirthDate = `${birthDateString[2]}/${birthDateString[1]}/${birthDateString[0]}`;
+      individual += formattedBirthDate;
 
-    //Insert common birth 9
-    individual += groupInfo[i].placeOfBirth.Codice;
-
-    //Insert provice onf birth 2
-    individual += groupInfo[i].placeOfBirth.Provincia;
-
-    //Insert state of birth 9
-    if (groupInfo[i].placeOfBirth.Provincia === "ES")
+      //Insert common birth 9
       individual += groupInfo[i].placeOfBirth.Codice;
-    else individual += "100000100";
 
-    //Insert citizenship
-    individual += groupInfo[i].citizenship.Codice;
+      //Insert provice onf birth 2
+      individual += groupInfo[i].placeOfBirth.Provincia;
 
-    //Insert document type
-    if (groupInfo[i].documentType.Codice !== undefined)
-      individual += groupInfo[i].documentType.Codice;
-    else individual += " ".repeat(5);
+      //Insert state of birth 9
+      if (groupInfo[i].placeOfBirth.Provincia === "ES")
+        individual += groupInfo[i].placeOfBirth.Codice;
+      else individual += "100000100";
 
-    //Insert document Number
-    if (groupInfo[i].documentNumber !== "") {
-      individual += groupInfo[i].documentNumber;
-      individual += " ".repeat(20 - groupInfo[i].documentNumber.length);
-    } else individual += " ".repeat(20);
+      //Insert citizenship
+      individual += groupInfo[i].citizenship.Codice;
 
-    //Insert Place of ReleaseDocument
-    if (groupInfo[i].placeOfReleaseDocument.Codice !== undefined)
-      individual += groupInfo[i].placeOfReleaseDocument.Codice;
-    else individual += " ".repeat(9);
-    individual += "</string>";
-    result += individual;
+      //Insert document type
+      if (groupInfo[i].documentType.Codice !== undefined)
+        individual += groupInfo[i].documentType.Codice;
+      else individual += " ".repeat(5);
+
+      //Insert document Number
+      if (groupInfo[i].documentNumber !== "") {
+        individual += groupInfo[i].documentNumber;
+        individual += " ".repeat(20 - groupInfo[i].documentNumber.length);
+      } else individual += " ".repeat(20);
+
+      //Insert Place of ReleaseDocument
+      if (groupInfo[i].placeOfReleaseDocument.Codice !== undefined)
+        individual += groupInfo[i].placeOfReleaseDocument.Codice;
+      else individual += " ".repeat(9);
+      individual += "</string>";
+      result += individual;
+    }
+    return result;
+  } catch (err) {
+    console.log("generate Policy service text error: ", err);
   }
-  return result;
 };
 
 export const getApartmentId = (nickname) => {
@@ -480,4 +484,26 @@ export const getAuthenticationToken = async (policyId) => {
   } catch (err) {
     console.log("Get Authentication Token");
   }
+};
+
+export const inputValueValidation = (groupInfo) => {
+  for (let i = 0; i < groupInfo.length; i++) {
+    if (
+      groupInfo[i].surname === "" ||
+      groupInfo[i].givenname === "" ||
+      groupInfo[i].gender === "" ||
+      groupInfo[i].placeOfBirth.Descrizione === "" ||
+      groupInfo[i].citizenship.Descrizione === ""
+    )
+      return false;
+    if (i === 0) {
+      if (
+        groupInfo[i].documentType.Descrizione === "" ||
+        groupInfo[i].documentNumber === "" ||
+        groupInfo[i].placeOfReleaseDocument.Descrizione === ""
+      )
+        return false;
+    }
+  }
+  return true;
 };

@@ -16,6 +16,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import axios from "axios";
 import { getAddressInfo } from "./config/config.js";
+import { cronWork1 } from "./cron/cronWork1.js";
 
 /* CONFIGURATION */
 dotenv.config();
@@ -46,15 +47,15 @@ mongoose
     console.log(err);
   });
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
 
-app.use(express.static(path.join(__dirname, "../build")));
+// app.use(express.static(path.join(__dirname, "../build")));
 
-// The "catchall" route (GET 404) for any request that doesn't match an API route
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../build", "index.html"));
-});
+// // The "catchall" route (GET 404) for any request that doesn't match an API route
+// app.get("*", (req, res) => {
+//   res.sendFile(path.join(__dirname, "../build", "index.html"));
+// });
 
 app.listen(PORT, () =>
   console.log(`Server Running on Port: http://localhost:${PORT}`)
@@ -63,20 +64,18 @@ app.listen(PORT, () =>
 //Node cron
 console.log(Buffer.from(process.env.S3_ENCRYPT_KEY).toString("base64"));
 
-// cron.schedule(
-//   "1 0 * * *",
-//   async () => {
-//     const tomorrow = new Date();
-//     tomorrow.setDate(tomorrow.getDate() + 1);
-//     const formattedDate = tomorrow.toISOString().split("T")[0];
-//     // const today = new Date().toISOString().split("T")[0];
-//     await cronWork(formattedDate);
-//   },
-//   {
-//     scheduled: true,
-//     timezone: "Europe/Rome",
-//   }
-// );
+cron.schedule(
+  "13 17 * * *",
+  async () => {
+    const tomorrow = new Date();
+    const formattedDate = tomorrow.toISOString().split("T")[0];
+    await cronWork1(formattedDate);
+  },
+  {
+    scheduled: true,
+    timezone: "Europe/Rome",
+  }
+);
 const aaa = async () => {
   const { province, postalCode } = await getAddressInfo(
     "Via dei Mille, 34/int 9, 47921 Rimini RN, Italy"
