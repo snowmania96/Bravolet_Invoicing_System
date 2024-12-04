@@ -74,7 +74,11 @@ export const cronWork = async (day) => {
       //Send geust info to policy service.
 
       //find ids have to be send today.
-      const guestInfo = await Id.find({ checkIn: day, sent: "false" });
+      const guestInfo = await Id.find({
+        checkIn: day,
+        sent: "false",
+        submitted: true,
+      });
       for (let i = 0; i < guestInfo.length; i++) {
         const policyServiceInfo = getApartmentId(guestInfo[i].nickname);
         console.log(policyServiceInfo);
@@ -119,7 +123,7 @@ export const cronWork = async (day) => {
         );
         const idInfo = await Id.findOneAndUpdate(
           { confirmationCode: guestInfo[i].confirmationCode },
-          { ...guestInfo[i], sent: "false->true" },
+          { sent: "false->true" },
           { new: true }
         );
       }

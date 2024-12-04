@@ -5,6 +5,7 @@ import {
   generatePolicyServiceText,
   getApartmentId,
   getAuthenticationToken,
+  inputValueValidation,
   postNoteOnGuestyInbox,
 } from "../config/config.js";
 import axios from "axios";
@@ -189,13 +190,29 @@ export const sendToPolicyService = async (req, res) => {
         groupInfo,
         reservationInfo.checkIn
       );
-      const idInfo = await Id.create({
-        confirmationCode: req.params.id,
-        guestInfoText: realServiceText,
-        checkIn: reservationInfo.checkIn.split("T")[0],
-        sent: sent,
-        nickname: reservationInfo.listing.nickname,
-      });
+      const isSaved = await Id.findOne({ confirmationCode: req.params.id });
+      let idInfo;
+      if (isSaved) {
+        idInfo = await Id.findOneAndUpdate(
+          { confirmationCode: req.params.id },
+          {
+            checkIn: reservationInfo.checkIn.split("T")[0],
+            sent: sent,
+            nickname: reservationInfo.listing.nickname,
+            submitted: true,
+          },
+          { new: true }
+        );
+      } else {
+        idInfo = await Id.create({
+          confirmationCode: req.params.id,
+          guestInfoText: realServiceText,
+          checkIn: reservationInfo.checkIn.split("T")[0],
+          sent: sent,
+          nickname: reservationInfo.listing.nickname,
+          submitted: true,
+        });
+      }
       if (idInfo) {
         //Post Note on Guesty Inbox
         await postNoteOnGuestyInbox(groupInfo, reservationInfo);
@@ -237,7 +254,7 @@ export const fetchReservation = async (req, res) => {
       id
     );
     // console.log(reservationInfo);
-    const idInfo = await Id.findOne({ confirmationCode: id });
+    const idInfo = await Id.findOne({ confirmationCode: id, submitted: true });
 
     const now = new Date();
     //Set Expiration Date as the next day of the Check In Date
@@ -258,6 +275,47 @@ export const fetchReservation = async (req, res) => {
     return res.status(200).json({ reservationInfo, location });
   } catch {
     res.status(404).json("note found the confirmation code");
+  }
+};
+
+export const autosave = async (req, res) => {
+  try {
+    const autosavedData = req.body.debouncedFormdata;
+    const { id } = req.params;
+    let apiKey = fs.readFileSync("./config.js", "utf8");
+    const reservationInfo = await fetchReservationInfoFromConfirmationCode(
+      apiKey,
+      id
+    );
+    const groupInfo = JSON.parse(autosavedData);
+    const validation = inputValueValidation(groupInfo);
+
+    if (validation) {
+      const serviceText = generatePolicyServiceText(
+        reservationInfo.nightsCount,
+        groupInfo,
+        reservationInfo.checkIn.split("T")[0]
+      );
+      const isSaved = await Id.findOne({ confirmationCode: id });
+      if (isSaved) {
+        const updated = await Id.findOneAndUpdate(
+          { confirmationCode: id },
+          { guestInfoText: serviceText },
+          { new: true }
+        );
+      } else {
+        await Id.create({
+          confirmationCode: id,
+          guestInfoText: serviceText,
+          sent: false,
+          checkIn: reservationInfo.checkIn.split("T")[0],
+          nickname: reservationInfo.listing.nickname,
+          submitted: false,
+        });
+      }
+    }
+  } catch (err) {
+    console.log("auto save error", err);
   }
 };
 
