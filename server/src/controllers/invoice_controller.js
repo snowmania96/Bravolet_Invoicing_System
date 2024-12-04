@@ -33,6 +33,14 @@ export const getReservationInfo = async (req, res) => {
 
     const cityTax = getCityTax(reservationInfo);
 
+    let net_price = cityTax.flag
+      ? reservationInfo.money.hostPayout - cityTax.amount
+      : reservationInfo.money.hostPayout;
+
+    if (reservationInfo.source === "abirbnb2") {
+      net_price += reservationInfo.money.hostServiceFeeIncTax;
+    }
+
     const result = {
       guestName: reservationInfo.guest.fullName,
       reservationId: reservationId,
@@ -40,9 +48,7 @@ export const getReservationInfo = async (req, res) => {
       checkOut: guest.checkOut,
       listingFullName: reservationInfo.listing.title,
       listingAddress: reservationInfo.listing.address.full,
-      grandTotal: cityTax.flag
-        ? reservationInfo.money.hostPayout - cityTax.amount
-        : reservationInfo.money.hostPayout,
+      grandTotal: net_price,
       maxTouristTax: cityTax.amount,
       extra: guest.extra,
       finalized: guest.finalized,
