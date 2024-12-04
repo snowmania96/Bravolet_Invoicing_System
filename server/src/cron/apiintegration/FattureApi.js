@@ -48,7 +48,6 @@ export const createNewReceipt = async (reservationInfo, receiptCount) => {
     // console.log("Notes ", receipt.notes);
     const cityTax = getCityTax(reservationInfo);
 
-    //Need to change some values realted to the Airbnb hosting
     let net_price = cityTax.flag
       ? reservationInfo.money.hostPayout - cityTax.amount
       : reservationInfo.money.hostPayout;
@@ -70,7 +69,6 @@ export const createNewReceipt = async (reservationInfo, receiptCount) => {
       },
     ];
 
-    //We need to change the amount of receipt.
     receipt.payments_list = [
       {
         amount: net_price,
@@ -165,12 +163,19 @@ export const updateReceipt = async (
     receipt.notes = notes;
     // console.log("Notes ", receipt.notes);
     const cityTax = getCityTax(reservationInfo);
+
+    let net_price = cityTax.flag
+      ? reservationInfo.money.hostPayout - cityTax.amount
+      : reservationInfo.money.hostPayout;
+
+    if (reservationInfo.source === "abirbnb2") {
+      net_price += reservationInfo.money.hostServiceFeeIncTax;
+    }
+
     receipt.items_list = [
       {
         name: receipt.subject, //description
-        net_price: cityTax.flag
-          ? reservationInfo.money.hostPayout - cityTax.amount
-          : reservationInfo.money.hostPayout,
+        net_price: net_price,
         category: "cucina",
         discount: 0,
         qty: 1,
@@ -195,10 +200,8 @@ export const updateReceipt = async (
     receipt.payments_list = [
       {
         amount: cityTax.flag
-          ? Number(reservationInfo.money.hostPayout - cityTax.amount) +
-            Number(invoiceInfo.cityTax)
-          : Number(reservationInfo.money.hostPayout) +
-            Number(invoiceInfo.cityTax),
+          ? Number(net_price - cityTax.amount) + Number(invoiceInfo.cityTax)
+          : Number(net_price) + Number(invoiceInfo.cityTax),
         due_date: checkOutDate,
         paid_date: paidAt,
         status: reservationInfo.money.isFullyPaid ? "paid" : "not_paid",
@@ -333,12 +336,19 @@ export const createInvoice = async (
     invoice.notes = notes;
     // console.log("Notes ", invoice.notes);
     const cityTax = getCityTax(reservationInfo);
+
+    let net_price = cityTax.flag
+      ? reservationInfo.money.hostPayout - cityTax.amount
+      : reservationInfo.money.hostPayout;
+
+    if (reservationInfo.source === "abirbnb2") {
+      net_price += reservationInfo.money.hostServiceFeeIncTax;
+    }
+
     invoice.items_list = [
       {
         name: invoice.subject, //description
-        net_price: cityTax.flag
-          ? reservationInfo.money.hostPayout - cityTax.amount
-          : reservationInfo.money.hostPayout,
+        net_price: net_price,
         category: "cucina",
         discount: 0,
         qty: 1,
@@ -363,10 +373,8 @@ export const createInvoice = async (
     invoice.payments_list = [
       {
         amount: cityTax.flag
-          ? Number(reservationInfo.money.hostPayout - cityTax.amount) +
-            Number(invoiceInfo.cityTax)
-          : Number(reservationInfo.money.hostPayout) +
-            Number(invoiceInfo.cityTax),
+          ? Number(net_price - cityTax.amount) + Number(invoiceInfo.cityTax)
+          : Number(net_price) + Number(invoiceInfo.cityTax),
         due_date: checkOutDate,
         paid_date: paidAt,
         status: reservationInfo.money.isFullyPaid ? "paid" : "not_paid",
