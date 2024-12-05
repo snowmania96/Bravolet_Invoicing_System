@@ -14,6 +14,7 @@ import {
   updateReceiptNumber,
 } from "../config/config.js";
 import Id from "../model/Id.js";
+import axios from "axios";
 
 export const cronWork = async (day) => {
   try {
